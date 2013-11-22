@@ -1,0 +1,6 @@
+This root FS contains most basic linux utilities (implemented with busybox)
+and the Lynx web browser.
+
+Kernel config is available through /proc/config.gz
+
+Log in as root with no password.

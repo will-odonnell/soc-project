@@ -1,0 +1,1 @@
+cmd_/scratch/wodonnell/soc/OVPsim_linux_TLL_tlm2.0/application.irq/fpga_drv.ko := arm-linux-ld -EL  -r -o /scratch/wodonnell/soc/OVPsim_linux_TLL_tlm2.0/application.irq/fpga_drv.ko /scratch/wodonnell/soc/OVPsim_linux_TLL_tlm2.0/application.irq/fpga_drv.o /scratch/wodonnell/soc/OVPsim_linux_TLL_tlm2.0/application.irq/fpga_drv.mod.o
