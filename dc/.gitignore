@@ -1,0 +1,8 @@
+reports/*
+*.svf
+*.db
+*.gate.v
+*.sdc
+*.sdf
+*.ddc
+*.log
