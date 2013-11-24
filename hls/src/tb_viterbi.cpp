@@ -28,21 +28,23 @@ CCS_MAIN(int argc, char *argv[])
   
   CFDistance input[64];
   _DECISION output[64];
+  _DECISION* pOutput = output;
   int eCodeScheme = 1;
   int eChanType = 1;
   int iN1 = 1;
   int iN2 = 1;
-  int iBitA = 1;
-  int iBitB = 1;
-  int iPatA = 1;
-  int iPatB = 1;
+  int iBitA = 32;
+  int iBitB = 32;
+  int iPatA = 32;
+  int iPatB = 32;
   int iLvl = 1;
   int j;
 
-  // Initialize the input
+  // Initialize the input/output buffers
   for (j=0;j<64;j++) {
     input[j].rTow0 = golden_rTow0[j];
     input[j].rTow1 = golden_rTow1[j];
+    output[j] = 0xBEEF;
   }
   
   printf("Output buffer before decode:\n");
@@ -56,15 +58,19 @@ CCS_MAIN(int argc, char *argv[])
     //
     // Call Catapult hardware function
     //
-    CCS_DESIGN(InitDecode)(input,output,eCodeScheme,eChanType,
-                                          iN1,iN2,iBitA,iBitB,iPatA,iPatB,iLvl);
+    CCS_DESIGN(InitDecode)(input,pOutput,
+                           eCodeScheme,
+                           eChanType,
+                           iN1,iN2,
+                           iBitA,iBitB,
+                           iPatA,iPatB,iLvl);
 
   }
     //
     // Input/Output Results
     //
   for (j=0;j<64;j++) {
-    if (output[j] != golden_output[64]) {
+    if (output[j] != golden_output[j]) {
       printf("Output mismatch on element %d -> %d does not match %d\n",j,output[j],golden_output[j]);
     }
   }
