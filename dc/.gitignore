@@ -6,3 +6,4 @@ reports/*
 *.sdf
 *.ddc
 *.log
+*log.txt
