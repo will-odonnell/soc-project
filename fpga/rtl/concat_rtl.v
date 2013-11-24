@@ -1859,14 +1859,15 @@ module mgc_div(a,b,z);
       output [width_a-1:0] rdiv;
       output [width_b-1:0] rmod;
       
-      parameter llen = width_a;
-      parameter rlen = width_b;
-      reg [(llen+rlen)-1:0] lbuf;
-      reg [rlen:0] diff;
+//      parameter llen = width_a;
+//      parameter rlen = width_b;
+      reg [(32+32)-1:0] lbuf;
+      reg [32:0] diff;
 	  integer i;
       begin
 	 lbuf = 0;
-	 lbuf[llen-1:0] = l;
+	 lbuf[32-1:0] = l;
+/*
 	 for(i=width_a-1;i>=0;i=i-1)
 	   begin
               diff = minus(lbuf[(llen+rlen)-1:llen-1], {1'b0,r});
@@ -1877,7 +1878,54 @@ module mgc_div(a,b,z);
 	   end
 	 rmod = lbuf[(llen+rlen)-1:llen];
       end
-   endtask
+*/
+// The for-loop isn't synthesizing in Xilinx, so I am unrolling
+// it here.
+
+    diff = minus(lbuf[(32+32)-1:32-1], {1'b0,r});
+
+	 rdiv[7] = ~diff[32];
+	 rdiv[6] = ~diff[32];	 
+	 rdiv[5] = ~diff[32];
+	 rdiv[4] = ~diff[32];	 
+	 rdiv[3] = ~diff[32];
+	 rdiv[2] = ~diff[32];	 
+	 rdiv[1] = ~diff[32];
+	 rdiv[0] = ~diff[32];	 
+
+	 rdiv[8+7] = ~diff[32];
+	 rdiv[8+6] = ~diff[32];	 
+	 rdiv[8+5] = ~diff[32];
+	 rdiv[8+4] = ~diff[32];	 
+	 rdiv[8+3] = ~diff[32];
+	 rdiv[8+2] = ~diff[32];	 
+	 rdiv[8+1] = ~diff[32];
+	 rdiv[8+0] = ~diff[32];	 
+
+	 rdiv[16+7] = ~diff[32];
+	 rdiv[16+6] = ~diff[32];	 
+	 rdiv[16+5] = ~diff[32];
+	 rdiv[16+4] = ~diff[32];	 
+	 rdiv[16+3] = ~diff[32];
+	 rdiv[16+2] = ~diff[32];	 
+	 rdiv[16+1] = ~diff[32];
+	 rdiv[16+0] = ~diff[32];	 
+
+	 rdiv[24+7] = ~diff[32];
+	 rdiv[24+6] = ~diff[32];	 
+	 rdiv[24+5] = ~diff[32];
+	 rdiv[24+4] = ~diff[32];	 
+	 rdiv[24+3] = ~diff[32];
+	 rdiv[24+2] = ~diff[32];	 
+	 rdiv[24+1] = ~diff[32];
+	 rdiv[24+0] = ~diff[32];	 
+
+	 if(diff[32] == 0)
+		lbuf[(32+32)-1:32-1] = diff;
+	 lbuf[(32+32)-1:1] = lbuf[(32+32)-2:0];
+    rmod = lbuf[(32+32)-1:32];
+    end
+	endtask
       
 
    task div_u;
