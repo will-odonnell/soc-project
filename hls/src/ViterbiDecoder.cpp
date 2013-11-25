@@ -31,6 +31,7 @@
 
 #include "ViterbiDecoder.h"
 
+
 /* Implementation *************************************************************/
 #pragma hls_design top
 int InitDecode(CFDistance vecNewDistance[64],
@@ -52,7 +53,8 @@ int			vecTrelMetric1[MC_NUM_STATES];  // Used to be float
 int			vecTrelMetric2[MC_NUM_STATES];	// Used to be float
 int			vecrMetricSet[MC_NUM_OUTPUT_COMBINATIONS];  
 			//Used to be _REAL[16]
-int		veciTablePuncPat[128];
+int		    veciTablePuncPat[128];
+int         veciReturn[128];
 int			iNumOutBits;
 int			iNumOutBitsWithMemory;
 _DECISIONTYPE	matdecDecisions[256][16];
@@ -68,13 +70,153 @@ _DECISIONTYPE	matdecDecisions[256][16];
 	/* Init vector, storing table for puncturing pattern and generate pattern */
 //	veciTablePuncPat.Init(iNumOutBitsWithMemory);
 
-//	veciTablePuncPat = GenPuncPatTable(eNewCodingScheme, eNewChannelType, iN1,
+//	GenPuncPatTable(eNewCodingScheme, eNewChannelType, iN1,
 //		iN2, iNewNumOutBitsPartA, iNewNumOutBitsPartB, iPunctPatPartA,
-//		iPunctPatPartB, iLevel);
+//		iPunctPatPartB, iLevel, veciTablePuncPat);
 
 	/* Init vector for storing the decided bits */
 //	matdecDecisions.Init(iNumOutBitsWithMemory, MC_NUM_STATES);
 	/*-----------------------------------------------------------------------------*/
+
+        /*-----------------------------------------------------------------------------*/
+{
+	int				i;
+	int				iNumOutBits;
+	int				iNumOutBitsWithMemory;
+	int				iTailbitPattern;
+	int				iTailbitParamL0;
+	int				iTailbitParamL1;
+	int				iPartAPatLen;
+	int				iPartBPatLen;
+	int				iPunctCounter;
+	int	veciPuncPatPartA[256];
+	int	veciPuncPatPartB[256];
+	int	veciTailBitPat[256];
+
+	/* Number of bits out is the sum of all protection levels */
+	iNumOutBits = iNewNumOutBitsPartA + iNewNumOutBitsPartB;
+
+	/* Number of out bits including the state memory */
+	iNumOutBitsWithMemory = iNumOutBits + MC_CONSTRAINT_LENGTH - 1;
+
+	/* Init vector, storing table for puncturing pattern */
+//	veciReturn.Init(iNumOutBitsWithMemory);
+
+
+	/* Set tail-bit pattern ------------------------------------------------- */
+	/* We have to consider two cases because in HSYM "N1 + N2" is used
+	   instead of only "N2" to calculate the tailbit pattern */
+	switch (eNewCodingScheme)
+	{
+	case CParameter::CS_3_HMMIX:
+		iTailbitParamL0 = iN1 + iN2;
+		iTailbitParamL1 = iN2;
+		break;
+
+	case CParameter::CS_3_HMSYM:
+		iTailbitParamL0 = 2 * (iN1 + iN2);
+		iTailbitParamL1 = 2 * iN2;
+		break;
+
+	default:
+		iTailbitParamL0 = 2 * iN2;
+		iTailbitParamL1 = 2 * iN2;
+	}
+
+	/* Tailbit pattern calculated according DRM-standard. We have to consider
+	   two cases because in HSYM "N1 + N2" is used instead of only "N2" */
+	if (iLevel == 0)
+		iTailbitPattern =
+			iTailbitParamL0 - 12 - iPuncturingPatterns[iPunctPatPartB][1] *
+			(int) ((iTailbitParamL0 - 12) /
+			iPuncturingPatterns[iPunctPatPartB][1]);
+	else
+		iTailbitPattern =
+			iTailbitParamL1 - 12 - iPuncturingPatterns[iPunctPatPartB][1] *
+			(int) ((iTailbitParamL1 - 12) /
+			iPuncturingPatterns[iPunctPatPartB][1]);
+
+
+	/* Set puncturing bit patterns and lengths ------------------------------ */
+	/* Lengths */
+	iPartAPatLen = iPuncturingPatterns[iPunctPatPartA][0];
+	iPartBPatLen = iPuncturingPatterns[iPunctPatPartB][0];
+
+	/* Vector, storing patterns for part A. Patterns begin at [][2 + x] */
+//	veciPuncPatPartA.Init(iPartAPatLen);
+	for (i = 0; i < iPartAPatLen; i++)
+		veciPuncPatPartA[i] = iPuncturingPatterns[iPunctPatPartA][2 + i];
+
+	/* Vector, storing patterns for part B. Patterns begin at [][2 + x] */
+//	veciPuncPatPartB.Init(iPartBPatLen);
+	for (i = 0; i < iPartBPatLen; i++)
+		veciPuncPatPartB[i] = iPuncturingPatterns[iPunctPatPartB][2 + i];
+
+	/* Vector, storing patterns for tailbit pattern */
+//	veciTailBitPat.Init(LENGTH_TAIL_BIT_PAT);
+	for (i = 0; i < LENGTH_TAIL_BIT_PAT; i++)
+		veciTailBitPat[i] = iPunctPatTailbits[iTailbitPattern][i];
+
+
+	/* Generate actual table for puncturing pattern ------------------------- */
+	/* Reset counter for puncturing */
+	iPunctCounter = 0;
+
+	for (i = 0; i < iNumOutBitsWithMemory; i++)
+	{
+		if (i < iNewNumOutBitsPartA)
+		{
+			/* Puncturing patterns part A */
+			/* Get current pattern */
+			veciReturn[i] = veciPuncPatPartA[iPunctCounter];
+
+			/* Increment index and take care of wrap around */
+			iPunctCounter++;
+			if (iPunctCounter == iPartAPatLen)
+				iPunctCounter = 0;
+		}
+		else
+		{
+			/* In case of FAC do not use special tailbit-pattern! */
+			if ((i < iNumOutBits) || (eNewChannelType == CParameter::CT_FAC))
+			{
+				/* Puncturing patterns part B */
+				/* Reset counter when beginning of part B is reached */
+				if (i == iNewNumOutBitsPartA)
+					iPunctCounter = 0;
+
+				/* Get current pattern */
+				veciReturn[i] = veciPuncPatPartB[iPunctCounter];
+
+				/* Increment index and take care of wrap around */
+				iPunctCounter++;
+				if (iPunctCounter == iPartBPatLen)
+					iPunctCounter = 0;
+			}
+			else
+			{
+				/* Tailbits */
+				/* Check when tailbit pattern starts */
+				if (i == iNumOutBits)
+					iPunctCounter = 0;
+
+				/* Set tailbit pattern */
+				veciReturn[i] = veciTailBitPat[iPunctCounter];
+
+				/* No test for wrap around needed, since there ist only one
+				   cycle of this pattern */
+				iPunctCounter++;
+			}
+		}
+	
+	veciTablePuncPat[i] = veciReturn[i];
+	}
+
+        	
+}
+
+
+        /*-----------------------------------------------------------------------------*/
 
 
 	/* Init pointers for old and new trellis state */
@@ -358,3 +500,147 @@ UPDATE_MATRIX_LOOP:
 	int retValue = pOldTrelMetric[0] / iDistCnt;
 	return retValue;
 }
+
+#if 0
+void GenPuncPatTable(int eNewCodingScheme,
+         	   int eNewChannelType,
+		     int iN1, int iN2,
+		     int iNewNumOutBitsPartA,
+		     int iNewNumOutBitsPartB,
+		     int iPunctPatPartA, int iPunctPatPartB,
+		     int iLevel,
+		     int veciReturn[256])
+{
+	int				i;
+	int				iNumOutBits;
+	int				iNumOutBitsWithMemory;
+	int				iTailbitPattern;
+	int				iTailbitParamL0;
+	int				iTailbitParamL1;
+	int				iPartAPatLen;
+	int				iPartBPatLen;
+	int				iPunctCounter;
+	int	veciPuncPatPartA[256];
+	int	veciPuncPatPartB[256];
+	int	veciTailBitPat[256];
+
+	/* Number of bits out is the sum of all protection levels */
+	iNumOutBits = iNewNumOutBitsPartA + iNewNumOutBitsPartB;
+
+	/* Number of out bits including the state memory */
+	iNumOutBitsWithMemory = iNumOutBits + MC_CONSTRAINT_LENGTH - 1;
+
+	/* Init vector, storing table for puncturing pattern */
+//	veciReturn.Init(iNumOutBitsWithMemory);
+
+
+	/* Set tail-bit pattern ------------------------------------------------- */
+	/* We have to consider two cases because in HSYM "N1 + N2" is used
+	   instead of only "N2" to calculate the tailbit pattern */
+	switch (eNewCodingScheme)
+	{
+	case CParameter::CS_3_HMMIX:
+		iTailbitParamL0 = iN1 + iN2;
+		iTailbitParamL1 = iN2;
+		break;
+
+	case CParameter::CS_3_HMSYM:
+		iTailbitParamL0 = 2 * (iN1 + iN2);
+		iTailbitParamL1 = 2 * iN2;
+		break;
+
+	default:
+		iTailbitParamL0 = 2 * iN2;
+		iTailbitParamL1 = 2 * iN2;
+	}
+
+	/* Tailbit pattern calculated according DRM-standard. We have to consider
+	   two cases because in HSYM "N1 + N2" is used instead of only "N2" */
+	if (iLevel == 0)
+		iTailbitPattern =
+			iTailbitParamL0 - 12 - iPuncturingPatterns[iPunctPatPartB][1] *
+			(int) ((iTailbitParamL0 - 12) /
+			iPuncturingPatterns[iPunctPatPartB][1]);
+	else
+		iTailbitPattern =
+			iTailbitParamL1 - 12 - iPuncturingPatterns[iPunctPatPartB][1] *
+			(int) ((iTailbitParamL1 - 12) /
+			iPuncturingPatterns[iPunctPatPartB][1]);
+
+
+	/* Set puncturing bit patterns and lengths ------------------------------ */
+	/* Lengths */
+	iPartAPatLen = iPuncturingPatterns[iPunctPatPartA][0];
+	iPartBPatLen = iPuncturingPatterns[iPunctPatPartB][0];
+
+	/* Vector, storing patterns for part A. Patterns begin at [][2 + x] */
+//	veciPuncPatPartA.Init(iPartAPatLen);
+	for (i = 0; i < iPartAPatLen; i++)
+		veciPuncPatPartA[i] = iPuncturingPatterns[iPunctPatPartA][2 + i];
+
+	/* Vector, storing patterns for part B. Patterns begin at [][2 + x] */
+//	veciPuncPatPartB.Init(iPartBPatLen);
+	for (i = 0; i < iPartBPatLen; i++)
+		veciPuncPatPartB[i] = iPuncturingPatterns[iPunctPatPartB][2 + i];
+
+	/* Vector, storing patterns for tailbit pattern */
+//	veciTailBitPat.Init(LENGTH_TAIL_BIT_PAT);
+	for (i = 0; i < LENGTH_TAIL_BIT_PAT; i++)
+		veciTailBitPat[i] = iPunctPatTailbits[iTailbitPattern][i];
+
+
+	/* Generate actual table for puncturing pattern ------------------------- */
+	/* Reset counter for puncturing */
+	iPunctCounter = 0;
+
+	for (i = 0; i < iNumOutBitsWithMemory; i++)
+	{
+		if (i < iNewNumOutBitsPartA)
+		{
+			/* Puncturing patterns part A */
+			/* Get current pattern */
+			veciReturn[i] = veciPuncPatPartA[iPunctCounter];
+
+			/* Increment index and take care of wrap around */
+			iPunctCounter++;
+			if (iPunctCounter == iPartAPatLen)
+				iPunctCounter = 0;
+		}
+		else
+		{
+			/* In case of FAC do not use special tailbit-pattern! */
+			if ((i < iNumOutBits) || (eNewChannelType == CParameter::CT_FAC))
+			{
+				/* Puncturing patterns part B */
+				/* Reset counter when beginning of part B is reached */
+				if (i == iNewNumOutBitsPartA)
+					iPunctCounter = 0;
+
+				/* Get current pattern */
+				veciReturn[i] = veciPuncPatPartB[iPunctCounter];
+
+				/* Increment index and take care of wrap around */
+				iPunctCounter++;
+				if (iPunctCounter == iPartBPatLen)
+					iPunctCounter = 0;
+			}
+			else
+			{
+				/* Tailbits */
+				/* Check when tailbit pattern starts */
+				if (i == iNumOutBits)
+					iPunctCounter = 0;
+
+				/* Set tailbit pattern */
+				veciReturn[i] = veciTailBitPat[iPunctCounter];
+
+				/* No test for wrap around needed, since there ist only one
+				   cycle of this pattern */
+				iPunctCounter++;
+			}
+		}
+	}
+
+	return;
+}
+#endif

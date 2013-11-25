@@ -29,15 +29,15 @@ CCS_MAIN(int argc, char *argv[])
   CFDistance input[64];
   _DECISION output[64];
   _DECISION* pOutput = output;
-  int eCodeScheme = 1;
-  int eChanType = 1;
-  int iN1 = 1;
-  int iN2 = 1;
-  int iBitA = 32;
-  int iBitB = 32;
-  int iPatA = 32;
-  int iPatB = 32;
-  int iLvl = 1;
+  int eCodeScheme = 2;
+  int eChanType = 0;
+  int iN1 = 0;
+  int iN2 = 2337;
+  int iBitA = 0;
+  int iBitB = 3495;
+  int iPatA = 9;
+  int iPatB = 9;
+  int iLvl = 2;
   int j;
 
   // Initialize the input/output buffers
@@ -47,10 +47,10 @@ CCS_MAIN(int argc, char *argv[])
     output[j] = 0xBEEF;
   }
   
-  printf("Output buffer before decode:\n");
-  for (j=0;j<64;j++) {
-      printf("output[%d] = %d\n",j,output[j]);
-  }
+//  printf("Output buffer before decode:\n");
+//  for (j=0;j<64;j++) {
+//      printf("output[%d] = %d\n",j,output[j]);
+//  }
 
   // Run the decoder
   {
