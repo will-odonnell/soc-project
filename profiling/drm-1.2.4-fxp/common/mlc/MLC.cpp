@@ -27,6 +27,10 @@
 \******************************************************************************/
 
 #include "MLC.h"
+#include <fstream>
+#include <iostream>
+#include <vector>
+using namespace std;
 
 
 /* Implementation *************************************************************/
@@ -274,7 +278,55 @@ fflush(pFile);
 
 
 			/* Viterbi decoder ---------------------------------------------- */
+			{
+				int ivec = 0;
+
+				// Declare the file handlers.
+				ofstream goldenInput_rTow0;
+				ofstream goldenInput_rTow1;
+				
+				// Read input buffer
+				goldenInput_rTow0.open("goldenInput_rTow0.txt");
+				goldenInput_rTow1.open("goldenInput_rTow1.txt");
+				
+				goldenInput_rTow0 << "iLevel = " << j << "\n";
+				goldenInput_rTow1 << "iLevel = " << j << "\n";
+				for(ivec=0; ivec<fvecMetric.Size(); ivec++) {
+					goldenInput_rTow0 << (double) fvecMetric[ivec].rTow0 <<",";
+					goldenInput_rTow1 << (double) fvecMetric[ivec].rTow1 <<","; 
+				
+					if(ivec % 16 == 0) {
+						goldenInput_rTow0 << "\n";
+						goldenInput_rTow1 << "\n";
+					}
+				}
+				goldenInput_rTow0 << "\n\n" << "--------------------------------\n";
+				goldenInput_rTow1 << "\n\n" << "--------------------------------\n";
+				goldenInput_rTow0.close();
+				goldenInput_rTow1.close();
+			}
+
 			frAccMetric = ViterbiDecoder[j].Decode(fvecMetric, vecDecOutBits[j]);
+			
+			{
+				int ivec = 0;
+
+				// Declare the file handlers.
+				ofstream goldenOutput;
+				
+				// Read output buffer
+				goldenOutput.open("goldenOutput.txt");
+				goldenOutput << "iLevel = " << j << "\n";
+				for(ivec=0; ivec<vecDecOutBits[j].Size(); ivec++) {
+					goldenOutput << (double) vecDecOutBits[j][ivec] <<",";
+				
+					if(ivec % 16 == 0) {
+						goldenOutput << "\n";
+					}
+				}
+				goldenOutput << "\n\n" << "--------------------------------\n";
+				goldenOutput.close();
+			}
 
 			/* The last branch of encoding and interleaving must not be used at
 			   the very last loop */
@@ -409,6 +461,29 @@ void CMLCDecoder::InitInternal(CParameter& ReceiverParam)
 	EnergyDisp.Init(iNumOutBits, iL[2]);
 
 	/* Viterby decoder */
+	{
+		int ivec = 0;
+
+		// Declare the file handlers.
+		ofstream goldenInput_params;
+				
+		// Read output buffer
+		goldenInput_params.open("goldenInput_params.txt");
+		for(ivec=0; ivec<iLevels; ivec++) {
+			goldenInput_params << "iLevel = " << ivec << "\n";
+			goldenInput_params << "  eCodingScheme = " << eCodingScheme << "\n";
+			goldenInput_params << "  eChannelType  = " << eChannelType << "\n";
+			goldenInput_params << "  iN[0]         = " << iN[0] << "\n";
+			goldenInput_params << "  iN[1]         = " << iN[1] << "\n";
+			goldenInput_params << "  iM[0]         = " << iM[ivec][0] << "\n";
+			goldenInput_params << "  iM[1]         = " << iM[ivec][1] << "\n";
+			goldenInput_params << "  iCodeRate[0]  = " << iCodeRate[ivec][0] << "\n";
+			goldenInput_params << "  iCodeRate[1]  = " << iCodeRate[ivec][1] << "\n";
+			
+		}
+		goldenInput_params.close();
+	}
+
 	for (i = 0; i < iLevels; i++)
 		ViterbiDecoder[i].Init(eCodingScheme, eChannelType, iN[0], iN[1], 
 			iM[i][0], iM[i][1], iCodeRate[i][0], iCodeRate[i][1], i);
