@@ -43,6 +43,7 @@ int InitDecode(CFDistance vecNewDistance[64],
 				int iPunctPatPartA, int iPunctPatPartB, int iLevel)
 {
 	int		i;
+    int     j;
 	int		iDistCnt;
 	int		iCurDecState;
 	int*		pCurTrelMetric;	// Used to be float*
@@ -53,11 +54,11 @@ int			vecTrelMetric1[MC_NUM_STATES];  // Used to be float
 int			vecTrelMetric2[MC_NUM_STATES];	// Used to be float
 int			vecrMetricSet[MC_NUM_OUTPUT_COMBINATIONS];  
 			//Used to be _REAL[16]
-int		    veciTablePuncPat[128];
-int         veciReturn[128];
+int		    veciTablePuncPat[256];
+int         veciReturn[256];
 int			iNumOutBits;
 int			iNumOutBitsWithMemory;
-_DECISIONTYPE	matdecDecisions[128][16];
+_DECISIONTYPE	matdecDecisions[256][64];
 
 	int				iTailbitPattern;
 	int				iTailbitParamL0;
@@ -81,6 +82,10 @@ _DECISIONTYPE	matdecDecisions[128][16];
 
 	/* Init vector, storing table for puncturing pattern and generate pattern */
 //	veciTablePuncPat.Init(iNumOutBitsWithMemory);
+    for(i=0;i<iNumOutBitsWithMemory;i++) {
+        veciTablePuncPat[i] = 0;
+    }
+    
 
 //	GenPuncPatTable(eNewCodingScheme, eNewChannelType, iN1,
 //		iN2, iNewNumOutBitsPartA, iNewNumOutBitsPartB, iPunctPatPartA,
@@ -88,6 +93,11 @@ _DECISIONTYPE	matdecDecisions[128][16];
 
 	/* Init vector for storing the decided bits */
 //	matdecDecisions.Init(iNumOutBitsWithMemory, MC_NUM_STATES);
+    for(i=0;i<iNumOutBitsWithMemory;i++) {
+        for(j=0;j<64;j++) {
+            matdecDecisions[i][j] = 0;
+        }
+    }
 /*-----------------------------------------------------------------------------*/
 
 /*-----------------------------------------------------------------------------*/
@@ -394,7 +404,7 @@ MAIN_LOOP:
 		/* Unroll butterflys to avoid loop overhead. For c++ version, the
 		   actual calculation of the trellis update is done here, for MMX
 		   version, only the reordering of the new metrics is done here */
-#if 1		
+#if 0		
 	/* Roll up the loops to help with Catapult synthesis */
 	{
 		int b1,b2,b3,b4,b5,b6;
