@@ -54,13 +54,13 @@ int main(int argc, char *argv[])
   for (j=0;j<64;j++) {
     input[j].rTow0 = golden_rTow0[j];
     input[j].rTow1 = golden_rTow1[j];
-    output[j] = 0xBEEF;
+    output[j] = 0xA5;
   }
   
-//  printf("Output buffer before decode:\n");
-//  for (j=0;j<64;j++) {
-//      printf("output[%d] = %d\n",j,output[j]);
-//  }
+  printf("Output buffer before decode:\n");
+  for (j=0;j<64;j++) {
+      printf("output[%d] = %d\n",j,output[j]);
+  }
 
   // Run the decoder
   {
@@ -76,8 +76,14 @@ int main(int argc, char *argv[])
                            iBitA,iBitB,
                            iPatA,iPatB,iLvl);
 #else
-
+    InitDecode(            input,pOutput,
+                           eCodeScheme,
+                           eChanType,
+                           iN1,iN2,
+                           iBitA,iBitB,
+                           iPatA,iPatB,iLvl);
 #endif
+    printf("Viterbi decode complete.\n");
 
   }
     //
@@ -85,13 +91,12 @@ int main(int argc, char *argv[])
     //
   for (j=0;j<64;j++) {
     if (output[j] != golden_output[j]) {
-      //printf("Output mismatch on element %d -> %d does not match %d\n",j,output[j],golden_output[j]);
+      printf("Output mismatch on element %d -> %d does not match %d\n",j,output[j],golden_output[j]);
       mismatch++;
     }
   }
   
 
-    printf("Viterbi decode complete.\n");
     if (mismatch > 0) {
     printf("total mismatches: %d\n",mismatch);    
     }

@@ -31,6 +31,8 @@
 
 //#pragma warning(disable:4996)
 
+#include <cstdint>
+
 #include <complex>
 #if defined(__ARMCC__) || defined(__CC_ARM)
 #else
