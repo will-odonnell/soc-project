@@ -57,7 +57,19 @@ int		    veciTablePuncPat[128];
 int         veciReturn[128];
 int			iNumOutBits;
 int			iNumOutBitsWithMemory;
-_DECISIONTYPE	matdecDecisions[256][16];
+_DECISIONTYPE	matdecDecisions[128][16];
+
+	int				iTailbitPattern;
+	int				iTailbitParamL0;
+	int				iTailbitParamL1;
+	int				iPartAPatLen;
+	int				iPartBPatLen;
+	int				iPunctCounter;
+	int	veciPuncPatPartA[256];
+	int	veciPuncPatPartB[256];
+	int	veciTailBitPat[256];
+
+
 	/*-----------------------------------------------------------------------------*/
 	/* CViterbiDecoder::Init() - adding the init function here to combine function */
 	
@@ -76,32 +88,9 @@ _DECISIONTYPE	matdecDecisions[256][16];
 
 	/* Init vector for storing the decided bits */
 //	matdecDecisions.Init(iNumOutBitsWithMemory, MC_NUM_STATES);
-	/*-----------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------*/
 
-        /*-----------------------------------------------------------------------------*/
-{
-	int				i;
-	int				iNumOutBits;
-	int				iNumOutBitsWithMemory;
-	int				iTailbitPattern;
-	int				iTailbitParamL0;
-	int				iTailbitParamL1;
-	int				iPartAPatLen;
-	int				iPartBPatLen;
-	int				iPunctCounter;
-	int	veciPuncPatPartA[256];
-	int	veciPuncPatPartB[256];
-	int	veciTailBitPat[256];
-
-	/* Number of bits out is the sum of all protection levels */
-	iNumOutBits = iNewNumOutBitsPartA + iNewNumOutBitsPartB;
-
-	/* Number of out bits including the state memory */
-	iNumOutBitsWithMemory = iNumOutBits + MC_CONSTRAINT_LENGTH - 1;
-
-	/* Init vector, storing table for puncturing pattern */
-//	veciReturn.Init(iNumOutBitsWithMemory);
-
+/*-----------------------------------------------------------------------------*/
 
 	/* Set tail-bit pattern ------------------------------------------------- */
 	/* We have to consider two cases because in HSYM "N1 + N2" is used
@@ -212,11 +201,7 @@ _DECISIONTYPE	matdecDecisions[256][16];
 	veciTablePuncPat[i] = veciReturn[i];
 	}
 
-        	
-}
-
-
-        /*-----------------------------------------------------------------------------*/
+    /*-----------------------------------------------------------------------------*/
 
 
 	/* Init pointers for old and new trellis state */

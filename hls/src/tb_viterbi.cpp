@@ -2,8 +2,17 @@
 // modified by H.Park for catapult 2010
 #include "stdio.h"
 #include "ViterbiDecoder.h"
+
+//#define CATAPULT
+#ifdef CATAPULT
 #include <mc_scverify.h>
+#endif
+
+#ifdef CATAPULT
 CCS_MAIN(int argc, char *argv[])
+#else
+int main(int argc, char *argv[])
+#endif
 {
   double golden_rTow0[64] = { 	3.48087,6.83191,68.8044,36.9827,4.30804,77.6387,5.51903,74.9669,
 			   	71.4903,62.3567,46.593,7.48975,64.0657,57.4409,14.6554,79.4388,
@@ -32,13 +41,14 @@ CCS_MAIN(int argc, char *argv[])
   int eCodeScheme = 2;
   int eChanType = 0;
   int iN1 = 0;
-  int iN2 = 2337;
+  int iN2 = 64;
   int iBitA = 0;
-  int iBitB = 3495;
+  int iBitB = 64;
   int iPatA = 9;
   int iPatB = 9;
   int iLvl = 2;
   int j;
+  int mismatch = 0;
 
   // Initialize the input/output buffers
   for (j=0;j<64;j++) {
@@ -58,12 +68,16 @@ CCS_MAIN(int argc, char *argv[])
     //
     // Call Catapult hardware function
     //
+#ifdef CATAPULT
     CCS_DESIGN(InitDecode)(input,pOutput,
                            eCodeScheme,
                            eChanType,
                            iN1,iN2,
                            iBitA,iBitB,
                            iPatA,iPatB,iLvl);
+#else
+
+#endif
 
   }
     //
@@ -71,12 +85,20 @@ CCS_MAIN(int argc, char *argv[])
     //
   for (j=0;j<64;j++) {
     if (output[j] != golden_output[j]) {
-      printf("Output mismatch on element %d -> %d does not match %d\n",j,output[j],golden_output[j]);
+      //printf("Output mismatch on element %d -> %d does not match %d\n",j,output[j],golden_output[j]);
+      mismatch++;
     }
   }
+  
 
     printf("Viterbi decode complete.\n");
+    if (mismatch > 0) {
+    printf("total mismatches: %d\n",mismatch);    
+    }
 
-
+#ifdef CATAPULT
   CCS_RETURN(0);
+#else
+  return 0;
+#endif
 }
