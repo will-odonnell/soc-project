@@ -3,6 +3,10 @@
 #include "stdio.h"
 #include "ViterbiDecoder.h"
 
+#include "goldenInput_rTow0.h"
+#include "goldenInput_rTow1.h"
+#include "goldenOutput.h"
+
 //#define CATAPULT
 #ifdef CATAPULT
 #include <mc_scverify.h>
@@ -14,6 +18,7 @@ CCS_MAIN(int argc, char *argv[])
 int main(int argc, char *argv[])
 #endif
 {
+/*
   double golden_rTow0[64] = { 	3.48087,6.83191,68.8044,36.9827,4.30804,77.6387,5.51903,74.9669,
 			   	71.4903,62.3567,46.593,7.48975,64.0657,57.4409,14.6554,79.4388,
 			   	78.1065,87.2036,9.54176,7.61053,56.36,71.331,17.2903,2.8371,1.96042,
@@ -33,17 +38,17 @@ int main(int argc, char *argv[])
 
   _DECISION golden_output[64] = {0,1,1,1,0,1,1,0,0,1,1,0,0,1,1,0,1,1,0,0,1,1,1,0,0,1,1,1,0,0,1,1,
 				 1,0,1,1,0,0,1,1,0,1,0,0,1,1,0,0,0,0,0,1,1,0,0,1,1,0,0,1,1,1,0,0};
-
+*/
   
-  CFDistance input[64];
-  _DECISION output[64];
+  CFDistance input[256];
+  _DECISION output[256];
   _DECISION* pOutput = output;
   int eCodeScheme = 2;
   int eChanType = 0;
   int iN1 = 0;
-  int iN2 = 64;
+  int iN2 = 256;
   int iBitA = 0;
-  int iBitB = 64;
+  int iBitB = 256;
   int iPatA = 9;
   int iPatB = 9;
   int iLvl = 2;
@@ -51,14 +56,14 @@ int main(int argc, char *argv[])
   int mismatch = 0;
 
   // Initialize the input/output buffers
-  for (j=0;j<64;j++) {
+  for (j=0;j<256;j++) {
     input[j].rTow0 = golden_rTow0[j];
     input[j].rTow1 = golden_rTow1[j];
     output[j] = 0xA5;
   }
   
   printf("Output buffer before decode:\n");
-  for (j=0;j<64;j++) {
+  for (j=0;j<256;j++) {
       printf("output[%d] = %d\n",j,output[j]);
   }
 
@@ -89,7 +94,7 @@ int main(int argc, char *argv[])
     //
     // Input/Output Results
     //
-  for (j=0;j<64;j++) {
+  for (j=0;j<256;j++) {
     if (output[j] != golden_output[j]) {
       printf("Output mismatch on element %d -> %d does not match %d\n",j,output[j],golden_output[j]);
       mismatch++;
