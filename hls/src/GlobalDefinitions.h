@@ -30,8 +30,9 @@
 #define DEF_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_
 
 //#pragma warning(disable:4996)
-
+#ifdef USE_CSTDINT
 #include <cstdint>
+#endif
 
 #include <complex>
 #if defined(__ARMCC__) || defined(__CC_ARM)

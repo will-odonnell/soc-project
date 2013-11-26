@@ -1,0 +1,6 @@
+#! /bin/sh
+
+rm viterbi
+g++ -std=c++0x -DUSE_CSTDINT=1 -o viterbi *.h *.cpp
+chmod +x viterbi
+./viterbi
