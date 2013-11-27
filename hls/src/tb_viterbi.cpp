@@ -7,7 +7,7 @@
 #include "goldenInput_rTow1.h"
 #include "goldenOutput.h"
 
-//#define CATAPULT
+#define CATAPULT
 #ifdef CATAPULT
 #include <mc_scverify.h>
 #endif
@@ -61,11 +61,13 @@ int main(int argc, char *argv[])
     input[j].rTow1 = golden_rTow1[j];
     output[j] = 0xA5;
   }
-  
+
+#if 0  
   printf("Output buffer before decode:\n");
   for (j=0;j<256;j++) {
       printf("output[%d] = %d\n",j,output[j]);
   }
+#endif
 
   // Run the decoder
   {
