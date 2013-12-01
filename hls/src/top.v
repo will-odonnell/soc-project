@@ -296,7 +296,7 @@ RAMB16_S36 RAM16_IN0_2000_21FF (
                  .DI(MZ_BUF_DATA[31:0]),   // 32-bit data_in bus ([31:0])
                  .DIP(4'b0),               // 4-bit parity data_in bus ([35:32])
                  .ADDR(latched_addr[10:2]), // 9-bit address bus
-                 .EN(ram_enable_0),        // RAM enable signal
+                 .EN(ram_enable_in0),        // RAM enable signal
                  .WE(ram_wr_00),           // Write enable signal
                  .SSR(1'b0),               // set/reset signal
                  .CLK(!buffered_clk ),     // clock signal
@@ -304,7 +304,19 @@ RAMB16_S36 RAM16_IN0_2000_21FF (
                  .DOP(parity_out)          // 4-bit parity data_out bus ([35:32])
                  );
 
-RAMB16_S36 RAM16_IN0_2000_21FF (   
+RAMB16_S36 RAM16_IN0_2200_23FF (   
+                 .DI(MZ_BUF_DATA[31:0]),   // 32-bit data_in bus ([31:0])
+                 .DIP(4'b0),               // 4-bit parity data_in bus ([35:32])
+                 .ADDR(latched_addr[10:2]), // 9-bit address bus
+                 .EN(ram_enable_in0),        // RAM enable signal
+                 .WE(ram_wr_01),           // Write enable signal
+                 .SSR(1'b0),               // set/reset signal
+                 .CLK(!buffered_clk ),     // clock signal
+                 .DO(ram_data),            // 32-bit data_out bus ([31:0])
+                 .DOP(parity_out)          // 4-bit parity data_out bus ([35:32])
+                 );
+
+RAMB16_S36 RAM16_IN0_2400_25FF (   
                  .DI(MZ_BUF_DATA[31:0]),   // 32-bit data_in bus ([31:0])
                  .DIP(4'b0),               // 4-bit parity data_in bus ([35:32])
                  .ADDR(latched_addr[10:2]), // 9-bit address bus
@@ -316,7 +328,7 @@ RAMB16_S36 RAM16_IN0_2000_21FF (
                  .DOP(parity_out)          // 4-bit parity data_out bus ([35:32])
                  );
 
-RAMB16_S36 RAM16_IN0_2000_21FF (   
+RAMB16_S36 RAM16_IN0_2600_27FF (   
                  .DI(MZ_BUF_DATA[31:0]),   // 32-bit data_in bus ([31:0])
                  .DIP(4'b0),               // 4-bit parity data_in bus ([35:32])
                  .ADDR(latched_addr[10:2]), // 9-bit address bus
@@ -328,7 +340,7 @@ RAMB16_S36 RAM16_IN0_2000_21FF (
                  .DOP(parity_out)          // 4-bit parity data_out bus ([35:32])
                  );
 
-RAMB16_S36 RAM16_IN0_2000_21FF (   
+RAMB16_S36 RAM16_IN0_2800_29FF (   
                  .DI(MZ_BUF_DATA[31:0]),   // 32-bit data_in bus ([31:0])
                  .DIP(4'b0),               // 4-bit parity data_in bus ([35:32])
                  .ADDR(latched_addr[10:2]), // 9-bit address bus
@@ -340,7 +352,7 @@ RAMB16_S36 RAM16_IN0_2000_21FF (
                  .DOP(parity_out)          // 4-bit parity data_out bus ([35:32])
                  );
 
-RAMB16_S36 RAM16_IN0_2000_21FF (   
+RAMB16_S36 RAM16_IN0_2A00_2BFF (   
                  .DI(MZ_BUF_DATA[31:0]),   // 32-bit data_in bus ([31:0])
                  .DIP(4'b0),               // 4-bit parity data_in bus ([35:32])
                  .ADDR(latched_addr[10:2]), // 9-bit address bus
@@ -352,7 +364,7 @@ RAMB16_S36 RAM16_IN0_2000_21FF (
                  .DOP(parity_out)          // 4-bit parity data_out bus ([35:32])
                  );
 
-RAMB16_S36 RAM16_IN0_2000_21FF (   
+RAMB16_S36 RAM16_IN0_2C00_2DFF (   
                  .DI(MZ_BUF_DATA[31:0]),   // 32-bit data_in bus ([31:0])
                  .DIP(4'b0),               // 4-bit parity data_in bus ([35:32])
                  .ADDR(latched_addr[10:2]), // 9-bit address bus
@@ -364,7 +376,7 @@ RAMB16_S36 RAM16_IN0_2000_21FF (
                  .DOP(parity_out)          // 4-bit parity data_out bus ([35:32])
                  );
 
-RAMB16_S36 RAM16_IN0_2000_21FF (   
+RAMB16_S36 RAM16_IN0_2E00_2FFF (   
                  .DI(MZ_BUF_DATA[31:0]),   // 32-bit data_in bus ([31:0])
                  .DIP(4'b0),               // 4-bit parity data_in bus ([35:32])
                  .ADDR(latched_addr[10:2]), // 9-bit address bus
@@ -376,7 +388,7 @@ RAMB16_S36 RAM16_IN0_2000_21FF (
                  .DOP(parity_out)          // 4-bit parity data_out bus ([35:32])
                  );
 
-RAMB16_S36 RAM16_IN0_2000_21FF (   
+RAMB16_S36 RAM16_IN0_3000_31FF (   
                  .DI(MZ_BUF_DATA[31:0]),   // 32-bit data_in bus ([31:0])
                  .DIP(4'b0),               // 4-bit parity data_in bus ([35:32])
                  .ADDR(latched_addr[10:2]), // 9-bit address bus
@@ -388,19 +400,7 @@ RAMB16_S36 RAM16_IN0_2000_21FF (
                  .DOP(parity_out)          // 4-bit parity data_out bus ([35:32])
                  );
 
-RAMB16_S36 RAM16_IN0_2000_21FF (   
-                 .DI(MZ_BUF_DATA[31:0]),   // 32-bit data_in bus ([31:0])
-                 .DIP(4'b0),               // 4-bit parity data_in bus ([35:32])
-                 .ADDR(latched_addr[10:2]), // 9-bit address bus
-                 .EN(ram_enable_0),        // RAM enable signal
-                 .WE(ram_wr_00),           // Write enable signal
-                 .SSR(1'b0),               // set/reset signal
-                 .CLK(!buffered_clk ),     // clock signal
-                 .DO(ram_data),            // 32-bit data_out bus ([31:0])
-                 .DOP(parity_out)          // 4-bit parity data_out bus ([35:32])
-                 );
-
-RAMB16_S36 RAM16_IN0_2000_21FF (   
+RAMB16_S36 RAM16_IN0_3200_33FF (   
                  .DI(MZ_BUF_DATA[31:0]),   // 32-bit data_in bus ([31:0])
                  .DIP(4'b0),               // 4-bit parity data_in bus ([35:32])
                  .ADDR(latched_addr[10:2]), // 9-bit address bus
@@ -584,21 +584,19 @@ always @(posedge buffered_clk or negedge SYS_RST_N) begin
 
             else if (SYS_RST_N) begin 
 
-                 // --------------------------------------------------------------
-                 //    STATE 0
-                 // --------------------------------------------------------------
+                // --------------------------------------------------------------
+                //    STATE 0
+                // --------------------------------------------------------------
 
-                    if ((as_detected) && (state == 3'b000)) begin
-                        state          <= 3'b001;       // GOTO STATE 1
-                        ram_enable     <= 1'b1;         // Assert RAM enable
-                        latched_addr   <= MZ_BUF_ADDR;  // Latch address bus
-                      end
-                    
-                    else if ((!as_detected) && (state == 3'b000)) begin
-                        state          <= 3'b000;        // Stay in STATE 0
-                        ram_enable     <= 1'b0;
-                        dtack          <= 1'b0;          // Negate dtack
-                    end
+                if ((as_detected) && (state == 3'b000)) begin
+                    state          <= 3'b001;       // GOTO STATE 1
+                    ram_enable     <= 1'b1;         // Assert RAM enable
+                    latched_addr   <= MZ_BUF_ADDR;  // Latch address bus
+                end else if ((!as_detected) && (state == 3'b000)) begin
+                    state          <= 3'b000;        // Stay in STATE 0
+                    ram_enable     <= 1'b0;
+                    dtack          <= 1'b0;          // Negate dtack
+                end
 
                  // --------------------------------------------------------------
                  //    STATE 1
@@ -607,23 +605,22 @@ always @(posedge buffered_clk or negedge SYS_RST_N) begin
              	else if ((as_detected) && (state == 3'b001)) begin
                     state         <= 3'b010;      // GOTO STATE 2
 
-		    if (latched_addr
-		    case (latched_addr[7:0) begin
-			// Control Register
-		        8'h00: reg_run <= MZ_BUF_DATA;
+        		    if (latched_addr
+		                case (latched_addr[7:0) begin
+			                // Control Register
+		                    8'h00: reg_run <= MZ_BUF_DATA;
 			
-			// Input arguments to Viterbi
-			8'h10: reg_ncs    <= MZ_BUF_DATA;
-			8'h14: reg_nct    <= MZ_BUF_DATA;
-			8'h18: reg_n1     <= MZ_BUF_DATA;
-			8'h1C: reg_n2     <= MZ_BUF_DATA;
-			8'h20: reg_nnobpa <= MZ_BUF_DATA;
-			8'h24: reg_nnobpb <= MZ_BUF_DATA;
-			8'h28: reg_pppa   <= MZ_BUF_DATA;
-			8'h2C: reg_pppb   <= MZ_BUF_DATA;
-			8'h30: reg_lvl    <= MZ_BUF_DATA;
-		    end		        
-
+			                // Input arguments to Viterbi
+			                8'h10: reg_ncs    <= MZ_BUF_DATA;
+			                8'h14: reg_nct    <= MZ_BUF_DATA;
+			                8'h18: reg_n1     <= MZ_BUF_DATA;
+			                8'h1C: reg_n2     <= MZ_BUF_DATA;
+			                8'h20: reg_nnobpa <= MZ_BUF_DATA;
+			                8'h24: reg_nnobpb <= MZ_BUF_DATA;
+			                8'h28: reg_pppa   <= MZ_BUF_DATA;
+			                8'h2C: reg_pppb   <= MZ_BUF_DATA;
+			                8'h30: reg_lvl    <= MZ_BUF_DATA;
+		                end		        
      
                         ram_write[0]  <= !MZ_CPLD_MISC12 && !MZ_CPLD_BYTE_N[0];
                         ram_write[1]  <= !MZ_CPLD_MISC12 && !MZ_CPLD_BYTE_N[1];
@@ -634,9 +631,8 @@ always @(posedge buffered_clk or negedge SYS_RST_N) begin
 //                        ram_write[1]  <= !MZ_CPLD_RW && !MZ_CPLD_BYTE_N[1];
 //                        ram_write[2]  <= !MZ_CPLD_RW && !MZ_CPLD_BYTE_N[2];
 //                        ram_write[3]  <= !MZ_CPLD_RW && !MZ_CPLD_BYTE_N[3];
-                    end
-                        
-                    else if ((!as_detected) && (state == 3'b001)) begin
+
+                end else if ((!as_detected) && (state == 3'b001)) begin
                         state         <= 3'b100;     // GOTO  STATE 4
                     end
  
@@ -644,110 +640,97 @@ always @(posedge buffered_clk or negedge SYS_RST_N) begin
                  //    STATE 2
                  // --------------------------------------------------------------
 
-                    else if ((as_detected) && (state == 3'b010)) begin
-                        state          <= 3'b011;      // GOTO STATE 3
-                        ram_write[3:0] <= 4'b0;        // Disable writes to RAM
+                 else if ((as_detected) && (state == 3'b010)) begin
+                    state          <= 3'b011;      // GOTO STATE 3
+                    ram_write[3:0] <= 4'b0;        // Disable writes to RAM
 
-                    end
-
-                    else if ((!as_detected) && (state == 3'b010)) begin
-                        state         <= 3'b100;     // Go to STATE 4
-                        dtack         <= 1'b0;       // Negate dtack to CPLD
-                        ram_write     <= 4'b0;        // Disable writes to RAM
-
-                        end  
+                 end else if ((!as_detected) && (state == 3'b010)) begin
+                    state         <= 3'b100;     // Go to STATE 4
+                    dtack         <= 1'b0;       // Negate dtack to CPLD
+                    ram_write     <= 4'b0;        // Disable writes to RAM
+                 end  
   
                  // --------------------------------------------------------------
                  //    STATE 3
                  // --------------------------------------------------------------
 
-                    else if ((!dtack_wishbone) && (state == 3'b011)) begin
-                         state         <= 3'b011;      // STAY IN STATE 3
+                 else if ((!dtack_wishbone) && (state == 3'b011)) begin
+                    state         <= 3'b011;      // STAY IN STATE 3
 
-
-                    else if ((dtack_wishbone ) && (state == 3'b011)) begin
-                        //state          <= 3'b100;    // GOTO  STATE 4
-
-                        latched_data   <= (ram_data | {4{DIP_SW}});  // Read the data
+                 end else if ((dtack_wishbone ) && (state == 3'b011)) begin
+                    //state          <= 3'b100;    // GOTO  STATE 4
+                    latched_data   <= (ram_data | {4{DIP_SW}});  // Read the data
 /*
-                        feedback_addr   <= {
-                                           DIP_SW[7:0],
-                                           MZ_CPLD_MISC6,
-                                           MZ_CPLD_MISC9,
-                                           MZ_CPLD_MISC10,
-                                           MZ_CPLD_MISC12,
-                                           MZ_BUF_ADDR[19:0]
-                                           };
+                    feedback_addr   <= {
+                                       DIP_SW[7:0],
+                                       MZ_CPLD_MISC6,
+                                       MZ_CPLD_MISC9,
+                                       MZ_CPLD_MISC10,
+                                       MZ_CPLD_MISC12,
+                                       MZ_BUF_ADDR[19:0]
+                                       };
  */
-	             	if((latched_addr[10:2] == 9'b0)) begin
-				state <= 3'b110;
-		     	end
-			else begin
-				state <= 3'b100;
-			end
-								
-                    end
+                    if((latched_addr[10:2] == 9'b0)) begin
+				        state <= 3'b110;
+		     	    end else begin
+        				state <= 3'b100;
+		        	end
+					
+                end
                     
              
-                 // --------------------------------------------------------------
-                 //    STATE 4
-                 // --------------------------------------------------------------
+                // --------------------------------------------------------------
+                //    STATE 4
+                // --------------------------------------------------------------
 
- 
-                   else if ( state == 3'b100) begin
-                        state           <= 3'b101;        // GOTO STATE 5
-                        dtack           <= 1'b1;          // Assert dtack
-
-                   end
+                else if ( state == 3'b100) begin
+                    state           <= 3'b101;        // GOTO STATE 5
+                    dtack           <= 1'b1;          // Assert dtack
+                end
 
              
-                 // --------------------------------------------------------------
-                 //    STATE 5
-                 // --------------------------------------------------------------
+                // --------------------------------------------------------------
+                //    STATE 5
+                // --------------------------------------------------------------
 
-                    else if (as_detected & ( state == 3'b101)) begin
-                        state          <= 3'b101;        // Stay in STATE 5
-
-                   end
-
-                   else if (!as_detected & ( state == 3'b101)) begin
-                        state           <= 3'b000;        // GOTO STATE 0
-                        dtack           <= 1'b0;          // Negate dtack
-                        ram_enable      <= 1'b0;
-
-                   end
+                else if (as_detected & ( state == 3'b101)) begin
+                    state          <= 3'b101;        // Stay in STATE 5
+                end else if (!as_detected & ( state == 3'b101)) begin
+                    state           <= 3'b000;        // GOTO STATE 0
+                    dtack           <= 1'b0;          // Negate dtack
+                    ram_enable      <= 1'b0;
+                end
   
-                 // ---------------------------------------------------------
-                 //    STATE 6
-                 // ---------------------------------------------------------
+                // ---------------------------------------------------------
+                //    STATE 6
+                // ---------------------------------------------------------
 					  
-		else if(state == 3'b110) begin
-		  if(add_state == 3'b000) begin
-		    ram_enable     <= 1'b1;         // Assert RAM enable
-		    latched_addr[10:2]   <= 9'h001;  // Latch address bus
-		    ram_write      <= 4'b0;
-		    add_state      <= 3'b001;
-		  end else if(add_state == 3'b001) begin
-		    operand_a      <= ram_data;
-		    add_state <= 3'b010;
-		  end else if(add_state == 3'b010) begin
-		    ram_enable     <= 1'b1;         // Assert RAM enable
-		    latched_addr[10:2]   <= 9'h002;  // Latch address bus
-		    ram_write      <= 4'b0;
-		    add_state      <= 3'b011;
-		  end else if(add_state == 3'b011) begin
-		    operand_b <= ram_data;
-		    add_state <= 3'b100;
-		  end else if(add_state == 3'b100) begin
-		    latched_data <= operand_a + operand_b;
-		    add_state <= 3'b0;
-		    ram_enable <= 1'b0;
-		    state <= 3'b100;
-		  end
-		end
+		        else if(state == 3'b110) begin
+        		    if(add_state == 3'b000) begin
+		                ram_enable     <= 1'b1;         // Assert RAM enable
+		                latched_addr[10:2]   <= 9'h001;  // Latch address bus
+		                ram_write      <= 4'b0;
+		                add_state      <= 3'b001;
+		            end else if(add_state == 3'b001) begin
+		                operand_a      <= ram_data;
+		                add_state <= 3'b010;
+                    end else if(add_state == 3'b010) begin
+		                ram_enable     <= 1'b1;         // Assert RAM enable
+		                latched_addr[10:2]   <= 9'h002;  // Latch address bus
+		                ram_write      <= 4'b0;
+		                add_state      <= 3'b011;
+		            end else if(add_state == 3'b011) begin
+		                operand_b <= ram_data;
+		                add_state <= 3'b100;
+		            end else if(add_state == 3'b100) begin
+		                latched_data <= operand_a + operand_b;
+		                add_state <= 3'b0;
+		                ram_enable <= 1'b0;
+		                state <= 3'b100;
+		            end
+		        end
                                      
             end         //  END of MAIN CONTROL LOOP
-
      end          // END of State Machine LOOP
 
 
