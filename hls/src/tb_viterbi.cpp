@@ -7,7 +7,7 @@
 #include "goldenInput_rTow1.h"
 #include "goldenOutput.h"
 
-#define CATAPULT
+//#define CATAPULT
 #ifdef CATAPULT
 #include <mc_scverify.h>
 #endif
@@ -39,16 +39,19 @@ int main(int argc, char *argv[])
   _DECISION golden_output[64] = {0,1,1,1,0,1,1,0,0,1,1,0,0,1,1,0,1,1,0,0,1,1,1,0,0,1,1,1,0,0,1,1,
 				 1,0,1,1,0,0,1,1,0,1,0,0,1,1,0,0,0,0,0,1,1,0,0,1,1,0,0,1,1,1,0,0};
 */
-  
-  CFDistance input[256];
+ 
+  #define MINSIZE 4 
+ 
+  CFDistance input[260];
   _DECISION output[256];
   _DECISION* pOutput = output;
+  int iNumProcInputs = 0;
   int eCodeScheme = 2;
   int eChanType = 0;
   int iN1 = 0;
-  int iN2 = 256;
+  int iN2 = 1;
   int iBitA = 0;
-  int iBitB = 256;
+  int iBitB = 1;
   int iPatA = 9;
   int iPatB = 9;
   int iLvl = 2;
@@ -61,6 +64,14 @@ int main(int argc, char *argv[])
     input[j].rTow1 = golden_rTow1[j];
     output[j] = 0xA5;
   }
+  input[256].rTow0 = 0;
+  input[257].rTow0 = 0;
+  input[258].rTow0 = 0;
+  input[259].rTow0 = 0;
+  input[256].rTow1 = 0;
+  input[257].rTow1 = 0;
+  input[258].rTow1 = 0;
+  input[259].rTow1 = 0;
 
 #if 0  
   printf("Output buffer before decode:\n");
@@ -71,10 +82,26 @@ int main(int argc, char *argv[])
 
   // Run the decoder
   {
+    CFDistance stream_input[MINSIZE];
+    _DECISION stream_output[MINSIZE]; 
+
+    printf("Processed Inputs: %d\n",iNumProcInputs);
     printf("Viterbi decode starting...\n");
     //
     // Call Catapult hardware function
     //
+    int k = 0;
+    int m = 0;
+    int n = 0;
+    // Send in a set of inputs at a time to process a single bit.
+//    for (k=0;k<32;k++) {
+    while(k<32) {
+        for (m=0;m<MINSIZE;m++) {
+            stream_input[m].rTow0 = input[k+m].rTow0;
+            stream_input[m].rTow1 = input[k+m].rTow1;
+        }
+    
+
 #ifdef CATAPULT
     CCS_DESIGN(InitDecode)(input,pOutput,
                            eCodeScheme,
@@ -83,30 +110,48 @@ int main(int argc, char *argv[])
                            iBitA,iBitB,
                            iPatA,iPatB,iLvl);
 #else
-    InitDecode(            input,pOutput,
+    InitDecode(            stream_input,
+                           stream_output,
+                           &iNumProcInputs,
                            eCodeScheme,
                            eChanType,
                            iN1,iN2,
                            iBitA,iBitB,
                            iPatA,iPatB,iLvl);
 #endif
+
+    // Write the output from Viterbi to the storage buffer.
+    for(n=0;n<iNumProcInputs;n++) {
+        output[k+n] = stream_output[n];
+    }
+    printf("%d) Processed Inputs: %d\n",k,iNumProcInputs);
+
+    k = k+iNumProcInputs+1;
+    printf("k=%d\n",k);
+    }
+
     printf("Viterbi decode complete.\n");
 
   }
-    //
-    // Input/Output Results
-    //
-  for (j=0;j<256;j++) {
+
+
+  for (j=0;j<32;j++) {
     if (output[j] != golden_output[j]) {
-      printf("Output mismatch on element %d -> %d does not match %d\n",j,output[j],golden_output[j]);
-      mismatch++;
+//      printf("Output mismatch on element %d -> %d does not match %d\n",j,output[j],golden_output[j]);
+        printf("%d(%d), ",j,output[j]);
+        mismatch++;
+        if(mismatch % 10 == 0) { 
+            printf("\n");
+        }
     }
+    
   }
+    if (mismatch > 0) {
+        printf("\n");
+        printf("total mismatches: %d\n",mismatch);    
+    }
   
 
-    if (mismatch > 0) {
-    printf("total mismatches: %d\n",mismatch);    
-    }
 
 #ifdef CATAPULT
   CCS_RETURN(0);

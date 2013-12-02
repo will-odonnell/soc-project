@@ -34,9 +34,11 @@
 
 /* Implementation *************************************************************/
 #pragma hls_design top
-int InitDecode(CFDistance vecNewDistance[256],
-				_DECISION vecOutputBits[256],
-				int eNewCodingScheme,
+int InitDecode(CFDistance vecNewDistance[4],
+				_DECISION vecOutputBits[4],
+                int* iNumProcInputs,
+			//	int iPunctPatIndex,
+                int eNewCodingScheme,
 				int eNewChannelType,
 				int iN1, int iN2,
 				int iNewNumOutBitsPartA, int iNewNumOutBitsPartB,
@@ -54,11 +56,11 @@ int			vecTrelMetric1[MC_NUM_STATES];  // Used to be float
 int			vecTrelMetric2[MC_NUM_STATES];	// Used to be float
 int			vecrMetricSet[MC_NUM_OUTPUT_COMBINATIONS];  
 			//Used to be _REAL[16]
-int		    veciTablePuncPat[512];
-int         veciReturn[512];
+int		    veciTablePuncPat[256];
+int         veciReturn[256];
 int			iNumOutBits;
 int			iNumOutBitsWithMemory;
-_DECISIONTYPE	matdecDecisions[512][64];
+_DECISIONTYPE	matdecDecisions[256][64];
 
 	int				iTailbitPattern;
 	int				iTailbitParamL0;
@@ -66,9 +68,9 @@ _DECISIONTYPE	matdecDecisions[512][64];
 	int				iPartAPatLen;
 	int				iPartBPatLen;
 	int				iPunctCounter;
-	int	veciPuncPatPartA[512];
-	int	veciPuncPatPartB[512];
-	int	veciTailBitPat[512];
+	int	veciPuncPatPartA[4];
+	int	veciPuncPatPartB[4];
+	int	veciTailBitPat[4];
 
 
 	/*-----------------------------------------------------------------------------*/
@@ -76,10 +78,10 @@ _DECISIONTYPE	matdecDecisions[512][64];
 	
 	/* Number of bits out is the sum of all protection levels */
 	iNumOutBits = iNewNumOutBitsPartA + iNewNumOutBitsPartB;
-
+printf("VD: iNumOutBits=%d\n",iNumOutBits);
 	/* Number of out bits including the state memory */
 	iNumOutBitsWithMemory = iNumOutBits + MC_CONSTRAINT_LENGTH - 1;
-
+printf("VD: iNumOutBitsWithMemory=%d\n",iNumOutBitsWithMemory);
 	/* Init vector, storing table for puncturing pattern and generate pattern */
 //	veciTablePuncPat.Init(iNumOutBitsWithMemory);
     for(i=0;i<iNumOutBitsWithMemory;i++) {
@@ -161,7 +163,8 @@ _DECISIONTYPE	matdecDecisions[512][64];
 	/* Reset counter for puncturing */
 	iPunctCounter = 0;
 
-	for (i = 0; i < iNumOutBitsWithMemory; i++)
+	//for (i = 0; i < iNumOutBitsWithMemory; i++)
+	for (i = 0; i < 256; i++)
 	{
 		if (i < iNewNumOutBitsPartA)
 		{
@@ -211,6 +214,12 @@ _DECISIONTYPE	matdecDecisions[512][64];
 	veciTablePuncPat[i] = veciReturn[i];
 	}
 
+    printf("Puncturing Pattern\n");
+    for(i=0;i<256;i++) {
+        printf("%d: %x\n",i,veciTablePuncPat[i]);
+    }
+    return 0;
+
     /*-----------------------------------------------------------------------------*/
 
 
@@ -232,8 +241,9 @@ INIT_TRELLIS_LOOP:
 
 	/* Main loop over all bits ---------------------------------------------- */
 MAIN_LOOP:
-	for (i = 0; i < iNumOutBitsWithMemory; i++)
+	for (i = 0; i < iNumOutBits; i++)
 	{
+printf("VD: MAIN_LOOP iteration: %d\n",i);
 		/* Calculate all possible metrics ----------------------------------- */
 		/* There are only a small set of possible puncturing patterns used for
 		   DRM: 0001, 0101, 0011, 0111, 1111. These need different numbers of
@@ -465,6 +475,9 @@ BUTTERFLY_LOOP:
 		_VITMETRTYPE* pTMPTrelMetric = pCurTrelMetric;
 		pCurTrelMetric = pOldTrelMetric;
 		pOldTrelMetric = pTMPTrelMetric;
+
+printf("VD: iDistCnt=%d\n",iDistCnt);
+        *iNumProcInputs = iDistCnt;
 	}
 
 
@@ -474,7 +487,8 @@ BUTTERFLY_LOOP:
 	   in the encoder is padded with zeros at the end */
 	iCurDecState = 0;
 UPDATE_MATRIX_LOOP:
-	for (i = 0; i < iNumOutBits; i++)
+//	for (i = 0; i < iNumOutBits; i++)
+	for (i = 0; i < 4; i++)
 	{
 		/* Read out decisions "backwards". Mask only first bit, because in MMX
 		   implementation, all 8 bits of a "char" are set to the decision */

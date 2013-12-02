@@ -60,8 +60,10 @@
 /* In case of MAP decoder, all metrics must be stored for the entire input
    vector since we need them for the forward and backward direction */
 /*# define METRICSET(a)		vecrMetricSet */
-int InitDecode(CFDistance vecNewDistance[64],
-		_DECISION vecOutputBits[64],
+int InitDecode(CFDistance vecNewDistance[4],
+		_DECISION vecOutputBits[4],
+        int* iNumProcInputs,
+       // int iPunctPatIndex,
 		int eNewCodingScheme,
 		int eNewChannelType,
 		int iN1, int iN2,
