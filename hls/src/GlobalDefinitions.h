@@ -123,7 +123,7 @@ typedef unsigned char					_BYTE;
 typedef bool						_BOOLEAN;
 
 /* Fixed-point types */
-typedef int						_FREAL;
+typedef char						_FREAL;
 typedef complex<_FREAL>					_FCOMPLEX;
 
 typedef int             _INT;
@@ -309,31 +309,5 @@ void DebugError(const char* pchErDescr, const char* pchPar1Descr,
 void ErrorMessage(string strErrorString);
 
 
-/* Global functions ***********************************************************/
-/* Converting _REAL to _SAMPLE */
-inline _SAMPLE Real2Sample(const _REAL rInput)
-{
-	/* Lower bound */
-	if (rInput < -_MAXSHORT)
-		return -_MAXSHORT;
-
-	/* Upper bound */
-	if (rInput > _MAXSHORT)
-		return _MAXSHORT;
-
-	return (_SAMPLE) rInput;
-}
-inline _SAMPLE Real2Sample(const _FREAL rInput)
-{
-	/* Lower bound */
-	if (rInput < -_MAXSHORT)
-		return -_MAXSHORT;
-
-	/* Upper bound */
-	if (rInput > _MAXSHORT)
-		return _MAXSHORT;
-
-	return (_SAMPLE) rInput;
-}
 
 #endif // !defined(DEF_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)
