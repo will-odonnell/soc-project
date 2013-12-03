@@ -17,7 +17,6 @@
 // Additional Comments: Copyright 2006,2007,2008 -- DO NOT DISTRIBUTE
 //
 //////////////////////////////////////////////////////////////////////////////////
-
 module top (
                     SYS_CLK,          // 24 MHz FPGA clock
                     MZ_CPLD_CLKO,     // Clock from CPLD
@@ -125,7 +124,8 @@ reg        add_ack;
 // VITERBI CONTROL REGISTERS
 // -------------------------------------------------------------------
 reg [31:0] reg_run;	// Run register		BASE +	0x0000
-reg [31:0] reg_sts;	// Status register		0x0004
+reg [31:0] reg_rdy;	// Ready register		0x0004
+reg [31:0] reg_done;	// Done register		0x0008
 reg [31:0] reg_ncs;	// eNewCodingScheme		0x0010
 reg [31:0] reg_nct;	// eNewChannelType		0x0014
 reg [31:0] reg_n1;	// iN1				0x0018
@@ -136,7 +136,6 @@ reg [31:0] reg_pppa;	// iPunctPatPartA		0x0028
 reg [31:0] reg_pppb;	// iPunctPatPartB		0x002C
 reg [31:0] reg_lvl;	// iLevel			0x0030
 
-reg [31:0] reg_input;	//
 
 // -------------------------------------------------------------------
 //  DATA BUS ASSIGNMENTS
@@ -174,24 +173,61 @@ assign          buffered_clk = MZ_CPLD_CLKO;     // Clock from CPLD
 //assign          buffered_clk = FPGA_CLK3;       // 100 MHz clock
 //assign          buffered_clk = SYS_CLK;         // 24 MHz FPGA clock
 
+assign		vd_start = reg_run[0];
+wire		vd_ready;
+wire		vd_done;
+
+// Wires between block rams and viterbi
+wire	[15:0]	r0vd_datain;
+wire	[15:0]	r0vd_dataout;
+wire		r0vd_re;
+wire		r0vd_we;
+wire	[25:0]	r0vd_addr;
+
+wire	[15:0]	r1vd_datain;
+wire	[15:0]	r1vd_dataout;
+wire		r1vd_re;
+wire		r1vd_we;
+wire	[25:0]	r1vd_addr;
+
+wire	[15:0]	robvd_datain;
+wire	[15:0]	robvd_dataout;
+wire		robvd_re;
+wire		robvd_we;
+wire	[25:0]	robvd_addr;
+
+// Mux signals for rams
+assign		ram_in0_enable = (ram_in0_enable_select == 0) ? ram_in0_arm_enable  : ram_in0_vd_enable; 
+assign		ram_in1_enable = (ram_in1_enable_select == 0) ? ram_in1_arm_enable  : ram_in1_vd_enable; 
+assign		ram_out_enable = (ram_out_enable_select == 0) ? ram_out_arm_enable  : ram_out_vd_enable; 
+
+assign		ram_in0_write  = (ram_in0_write_select == 0)  ? ram_in0_arm_write   : ram_in0_vd_write; 
+assign		ram_in1_write  = (ram_in1_write_select == 0)  ? ram_in1_arm_write   : ram_in1_vd_write; 
+assign		ram_out_write  = (ram_out_write_select == 0)  ? ram_out_arm_write   : ram_out_vd_write; 
+
+assign		ram_in0_addr   = (ram_in0_addr_select == 0)   ? ram_in0_arm_addr  : ram_in0_vd_addr; 
+assign		ram_in1_addr   = (ram_in1_addr_select == 0)   ? ram_in1_arm_addr  : ram_in1_vd_addr; 
+assign		ram_out_addr   = (ram_out_addr_select == 0)   ? ram_out_arm_addr  : ram_out_vd_addr; 
+
+
 // -------------------------------------------------------------------
 //
 //  Viterbi Module Instantiation
 //
 // -------------------------------------------------------------------
 InitDecode Viterbi(
-  .start(),
-  .ready(),
-  .done(),
-  .eNewCodingScheme_rsc_z(),
-  .eNewChannelType_rsc_z(),
-  .iN1_rsc_z(),
-  .iN2_rsc_z(),
-  .iNewNumOutBitsPartA_rsc_z(),
-  .iNewNumOutBitsPartB_rsc_z(),
-  .iPunctPatPartA_rsc_z(),
-  .iPunctPatPartB_rsc_z(),
-  .iLevel_rsc_z(),
+  .start(vd_start),
+  .ready(vd_ready),
+  .done(vd_done),
+  .eNewCodingScheme_rsc_z(reg_ncs),
+  .eNewChannelType_rsc_z(reg_nct),
+  .iN1_rsc_z(reg_n1),
+  .iN2_rsc_z(reg_n2),
+  .iNewNumOutBitsPartA_rsc_z(reg_nnobpa),
+  .iNewNumOutBitsPartB_rsc_z(reg_nnobpb),
+  .iPunctPatPartA_rsc_z(reg_pppa),
+  .iPunctPatPartB_rsc_z(reg_pppb),
+  .iLevel_rsc_z(reg_lvl),
   .InitDecode_return_rsc_z(),
   .eNewCodingScheme_triosy_lz(),
   .eNewChannelType_triosy_lz(),
@@ -208,21 +244,21 @@ InitDecode Viterbi(
   .InitDecode_return_triosy_lz(),
   .clk(MZ_CPLD_CLKO),
   .rst(SYS_RST_N),
-  .vecNewDistance_rTow0_rsc_dualport_data_in(),
-  .vecNewDistance_rTow0_rsc_dualport_addr(),
-  .vecNewDistance_rTow0_rsc_dualport_re(),
-  .vecNewDistance_rTow0_rsc_dualport_we(),
-  .vecNewDistance_rTow0_rsc_dualport_data_out(),
-  .vecNewDistance_rTow1_rsc_dualport_data_in(),
-  .vecNewDistance_rTow1_rsc_dualport_addr(),
-  .vecNewDistance_rTow1_rsc_dualport_re(),
-  .vecNewDistance_rTow1_rsc_dualport_we(),
-  .vecNewDistance_rTow1_rsc_dualport_data_out(),
-  .vecOutputBits_rsc_dualport_data_in(),
-  .vecOutputBits_rsc_dualport_addr(),
-  .vecOutputBits_rsc_dualport_re(),
-  .vecOutputBits_rsc_dualport_we(),
-  .vecOutputBits_rsc_dualport_data_out()
+  .vecNewDistance_rTow0_rsc_dualport_data_in(r0vd_datain),
+  .vecNewDistance_rTow0_rsc_dualport_addr(r0vd_addr),
+  .vecNewDistance_rTow0_rsc_dualport_re(r0vd_re),
+  .vecNewDistance_rTow0_rsc_dualport_we(r0vd_we),
+  .vecNewDistance_rTow0_rsc_dualport_data_out(r0vd_dataout),
+  .vecNewDistance_rTow1_rsc_dualport_data_in(r1vd_datain),
+  .vecNewDistance_rTow1_rsc_dualport_addr(r1vd_addr),
+  .vecNewDistance_rTow1_rsc_dualport_re(r1vd_re),
+  .vecNewDistance_rTow1_rsc_dualport_we(r1vd_we),
+  .vecNewDistance_rTow1_rsc_dualport_data_out(r1vd_dataout),
+  .vecOutputBits_rsc_dualport_data_in(robvd_datain),
+  .vecOutputBits_rsc_dualport_addr(robvd_addr),
+  .vecOutputBits_rsc_dualport_re(robvd_re),
+  .vecOutputBits_rsc_dualport_we(robvd_we),
+  .vecOutputBits_rsc_dualport_data_out(robvd_dataout)
 );
 
 
@@ -291,152 +327,45 @@ RAMB16_S9 U_RAMB16_S9_A   (
 // Block RAM instantiations
 // ----------------------------------------------------------------------------
 
-// Input rTow0 buffer (0x2000-0x33FF -> 10 BRAMS)
-RAMB16_S36 RAM16_IN0_2000_21FF (   
-                 .DI(MZ_BUF_DATA[31:0]),   // 32-bit data_in bus ([31:0])
-                 .DIP(4'b0),               // 4-bit parity data_in bus ([35:32])
-                 .ADDR(latched_addr[10:2]), // 9-bit address bus
-                 .EN(ram_enable_0),        // RAM enable signal
-                 .WE(ram_wr_00),           // Write enable signal
+// Buffer for rTow0 inputs
+mem_8x6144 ram_input_rTow0   (   
+                 .DI(MZ_BUF_DATA[7:0]),    // 8-bit data_in bus
+                 .DIP(1'b0),               // 4-bit parity data_in bus 
+                 .ADDR(ram_in0_addr), // 11-bit address bus + 2 for chip select
+                 .EN(ram_in0_enable),          // RAM enable signal
+                 .WE(ram_in0_write),        // Write enable signal
                  .SSR(1'b0),               // set/reset signal
                  .CLK(!buffered_clk ),     // clock signal
-                 .DO(ram_data),            // 32-bit data_out bus ([31:0])
-                 .DOP(parity_out)          // 4-bit parity data_out bus ([35:32])
-                 );
+                 .DO(ram_data[7:0]),       // 8-bit data_out bus
+                 .DOP(parity_out[0])       // 1-bit parity data_out bus 
+);
 
-RAMB16_S36 RAM16_IN0_2000_21FF (   
-                 .DI(MZ_BUF_DATA[31:0]),   // 32-bit data_in bus ([31:0])
-                 .DIP(4'b0),               // 4-bit parity data_in bus ([35:32])
-                 .ADDR(latched_addr[10:2]), // 9-bit address bus
-                 .EN(ram_enable_0),        // RAM enable signal
-                 .WE(ram_wr_00),           // Write enable signal
+// Buffer for rTow1 inputs
+mem_8x6144 ram_input_rTow1   (   
+                 .DI(MZ_BUF_DATA[7:0]),    // 8-bit data_in bus
+                 .DIP(1'b0),               // 4-bit parity data_in bus 
+                 .ADDR(ram_in1_addr), // 11-bit address bus + 2 for chip select
+                 .EN(ram_in1_enable),          // RAM enable signal
+                 .WE(ram_in1_write),        // Write enable signal
                  .SSR(1'b0),               // set/reset signal
                  .CLK(!buffered_clk ),     // clock signal
-                 .DO(ram_data),            // 32-bit data_out bus ([31:0])
-                 .DOP(parity_out)          // 4-bit parity data_out bus ([35:32])
-                 );
+                 .DO(ram_data[7:0]),       // 8-bit data_out bus
+                 .DOP(parity_out[0])       // 1-bit parity data_out bus 
+);
 
-RAMB16_S36 RAM16_IN0_2000_21FF (   
-                 .DI(MZ_BUF_DATA[31:0]),   // 32-bit data_in bus ([31:0])
-                 .DIP(4'b0),               // 4-bit parity data_in bus ([35:32])
-                 .ADDR(latched_addr[10:2]), // 9-bit address bus
-                 .EN(ram_enable_0),        // RAM enable signal
-                 .WE(ram_wr_00),           // Write enable signal
+// Buffer for rTow1 inputs
+RAMB16_S1 ram_output   (   
+                 .DI(robvd_dataout),    // 8-bit data_in bus
+                 .DIP(1'b0),               // 4-bit parity data_in bus 
+                 .ADDR(ram_out_addr), // 11-bit address bus + 2 for chip select
+                 .EN(ram_out_enable),          // RAM enable signal
+                 .WE(ram_out_write),        // Write enable signal
                  .SSR(1'b0),               // set/reset signal
                  .CLK(!buffered_clk ),     // clock signal
-                 .DO(ram_data),            // 32-bit data_out bus ([31:0])
-                 .DOP(parity_out)          // 4-bit parity data_out bus ([35:32])
-                 );
+                 .DO(ram_data[7:0]),       // 8-bit data_out bus
+                 .DOP(parity_out[0])       // 1-bit parity data_out bus 
+);
 
-RAMB16_S36 RAM16_IN0_2000_21FF (   
-                 .DI(MZ_BUF_DATA[31:0]),   // 32-bit data_in bus ([31:0])
-                 .DIP(4'b0),               // 4-bit parity data_in bus ([35:32])
-                 .ADDR(latched_addr[10:2]), // 9-bit address bus
-                 .EN(ram_enable_0),        // RAM enable signal
-                 .WE(ram_wr_00),           // Write enable signal
-                 .SSR(1'b0),               // set/reset signal
-                 .CLK(!buffered_clk ),     // clock signal
-                 .DO(ram_data),            // 32-bit data_out bus ([31:0])
-                 .DOP(parity_out)          // 4-bit parity data_out bus ([35:32])
-                 );
-
-RAMB16_S36 RAM16_IN0_2000_21FF (   
-                 .DI(MZ_BUF_DATA[31:0]),   // 32-bit data_in bus ([31:0])
-                 .DIP(4'b0),               // 4-bit parity data_in bus ([35:32])
-                 .ADDR(latched_addr[10:2]), // 9-bit address bus
-                 .EN(ram_enable_0),        // RAM enable signal
-                 .WE(ram_wr_00),           // Write enable signal
-                 .SSR(1'b0),               // set/reset signal
-                 .CLK(!buffered_clk ),     // clock signal
-                 .DO(ram_data),            // 32-bit data_out bus ([31:0])
-                 .DOP(parity_out)          // 4-bit parity data_out bus ([35:32])
-                 );
-
-RAMB16_S36 RAM16_IN0_2000_21FF (   
-                 .DI(MZ_BUF_DATA[31:0]),   // 32-bit data_in bus ([31:0])
-                 .DIP(4'b0),               // 4-bit parity data_in bus ([35:32])
-                 .ADDR(latched_addr[10:2]), // 9-bit address bus
-                 .EN(ram_enable_0),        // RAM enable signal
-                 .WE(ram_wr_00),           // Write enable signal
-                 .SSR(1'b0),               // set/reset signal
-                 .CLK(!buffered_clk ),     // clock signal
-                 .DO(ram_data),            // 32-bit data_out bus ([31:0])
-                 .DOP(parity_out)          // 4-bit parity data_out bus ([35:32])
-                 );
-
-RAMB16_S36 RAM16_IN0_2000_21FF (   
-                 .DI(MZ_BUF_DATA[31:0]),   // 32-bit data_in bus ([31:0])
-                 .DIP(4'b0),               // 4-bit parity data_in bus ([35:32])
-                 .ADDR(latched_addr[10:2]), // 9-bit address bus
-                 .EN(ram_enable_0),        // RAM enable signal
-                 .WE(ram_wr_00),           // Write enable signal
-                 .SSR(1'b0),               // set/reset signal
-                 .CLK(!buffered_clk ),     // clock signal
-                 .DO(ram_data),            // 32-bit data_out bus ([31:0])
-                 .DOP(parity_out)          // 4-bit parity data_out bus ([35:32])
-                 );
-
-RAMB16_S36 RAM16_IN0_2000_21FF (   
-                 .DI(MZ_BUF_DATA[31:0]),   // 32-bit data_in bus ([31:0])
-                 .DIP(4'b0),               // 4-bit parity data_in bus ([35:32])
-                 .ADDR(latched_addr[10:2]), // 9-bit address bus
-                 .EN(ram_enable_0),        // RAM enable signal
-                 .WE(ram_wr_00),           // Write enable signal
-                 .SSR(1'b0),               // set/reset signal
-                 .CLK(!buffered_clk ),     // clock signal
-                 .DO(ram_data),            // 32-bit data_out bus ([31:0])
-                 .DOP(parity_out)          // 4-bit parity data_out bus ([35:32])
-                 );
-
-RAMB16_S36 RAM16_IN0_2000_21FF (   
-                 .DI(MZ_BUF_DATA[31:0]),   // 32-bit data_in bus ([31:0])
-                 .DIP(4'b0),               // 4-bit parity data_in bus ([35:32])
-                 .ADDR(latched_addr[10:2]), // 9-bit address bus
-                 .EN(ram_enable_0),        // RAM enable signal
-                 .WE(ram_wr_00),           // Write enable signal
-                 .SSR(1'b0),               // set/reset signal
-                 .CLK(!buffered_clk ),     // clock signal
-                 .DO(ram_data),            // 32-bit data_out bus ([31:0])
-                 .DOP(parity_out)          // 4-bit parity data_out bus ([35:32])
-                 );
-
-RAMB16_S36 RAM16_IN0_2000_21FF (   
-                 .DI(MZ_BUF_DATA[31:0]),   // 32-bit data_in bus ([31:0])
-                 .DIP(4'b0),               // 4-bit parity data_in bus ([35:32])
-                 .ADDR(latched_addr[10:2]), // 9-bit address bus
-                 .EN(ram_enable_0),        // RAM enable signal
-                 .WE(ram_wr_00),           // Write enable signal
-                 .SSR(1'b0),               // set/reset signal
-                 .CLK(!buffered_clk ),     // clock signal
-                 .DO(ram_data),            // 32-bit data_out bus ([31:0])
-                 .DOP(parity_out)          // 4-bit parity data_out bus ([35:32])
-                 );
-
-// Input rTow1 buffer (0x2000-0x2FFF)
-RAMB16_S36 U_RAMB16_S36 (   
-                 .DI(MZ_BUF_DATA[31:0]),   // 32-bit data_in bus ([31:0])
-                 .DIP(4'b0),               // 4-bit parity data_in bus ([35:32])
-                 .ADDR(latched_addr[10:2]), // 9-bit address bus
-                 .EN(ram_enable),          // RAM enable signal
-                 .WE(ram_wr),              // Write enable signal
-                 .SSR(1'b0),               // set/reset signal
-                 .CLK(!buffered_clk ),     // clock signal
-                 .DO(ram_data),            // 32-bit data_out bus ([31:0])
-                 .DOP(parity_out)          // 4-bit parity data_out bus ([35:32])
-                 );
-
-// Output buffer (0x3000-0x3FFF)
-RAMB16_S36 U_RAMB16_S36 (   
-                 .DI(MZ_BUF_DATA[31:0]),   // 32-bit data_in bus ([31:0])
-                 .DIP(4'b0),               // 4-bit parity data_in bus ([35:32])
-                 .ADDR(latched_addr[10:2]), // 9-bit address bus
-                 .EN(ram_enable),          // RAM enable signal
-                 .WE(ram_wr),              // Write enable signal
-                 .SSR(1'b0),               // set/reset signal
-                 .CLK(!buffered_clk ),     // clock signal
-                 .DO(ram_data),            // 32-bit data_out bus ([31:0])
-                 .DOP(parity_out)          // 4-bit parity data_out bus ([35:32])
-                 );
 
 
 
@@ -600,30 +529,30 @@ always @(posedge buffered_clk or negedge SYS_RST_N) begin
                         dtack          <= 1'b0;          // Negate dtack
                     end
 
-                 // --------------------------------------------------------------
-                 //    STATE 1
-                 // --------------------------------------------------------------
+                // --------------------------------------------------------------
+                //    STATE 1
+                // --------------------------------------------------------------
 
              	else if ((as_detected) && (state == 3'b001)) begin
                     state         <= 3'b010;      // GOTO STATE 2
 
-		    if (latched_addr
-		    case (latched_addr[7:0) begin
-			// Control Register
-		        8'h00: reg_run <= MZ_BUF_DATA;
-			
-			// Input arguments to Viterbi
-			8'h10: reg_ncs    <= MZ_BUF_DATA;
-			8'h14: reg_nct    <= MZ_BUF_DATA;
-			8'h18: reg_n1     <= MZ_BUF_DATA;
-			8'h1C: reg_n2     <= MZ_BUF_DATA;
-			8'h20: reg_nnobpa <= MZ_BUF_DATA;
-			8'h24: reg_nnobpb <= MZ_BUF_DATA;
-			8'h28: reg_pppa   <= MZ_BUF_DATA;
-			8'h2C: reg_pppb   <= MZ_BUF_DATA;
-			8'h30: reg_lvl    <= MZ_BUF_DATA;
-		    end		        
-
+		    if (latched_addr[15:12] == 0 ) begin
+		        case (latched_addr[7:0])
+			    // Control Register
+			    8'h00: reg_run <= MZ_BUF_DATA;		
+	
+			    // Input arguments to Viterbi
+			    8'h10: reg_ncs    <= MZ_BUF_DATA;
+			    8'h14: reg_nct    <= MZ_BUF_DATA;
+			    8'h18: reg_n1     <= MZ_BUF_DATA;
+			    8'h1C: reg_n2     <= MZ_BUF_DATA;
+			    8'h20: reg_nnobpa <= MZ_BUF_DATA;
+			    8'h24: reg_nnobpb <= MZ_BUF_DATA;
+			    8'h28: reg_pppa   <= MZ_BUF_DATA;
+			    8'h2C: reg_pppb   <= MZ_BUF_DATA;
+			    8'h30: reg_lvl    <= MZ_BUF_DATA;
+			endcase		        
+		    end else begin
      
                         ram_write[0]  <= !MZ_CPLD_MISC12 && !MZ_CPLD_BYTE_N[0];
                         ram_write[1]  <= !MZ_CPLD_MISC12 && !MZ_CPLD_BYTE_N[1];
@@ -636,13 +565,13 @@ always @(posedge buffered_clk or negedge SYS_RST_N) begin
 //                        ram_write[3]  <= !MZ_CPLD_RW && !MZ_CPLD_BYTE_N[3];
                     end
                         
-                    else if ((!as_detected) && (state == 3'b001)) begin
-                        state         <= 3'b100;     // GOTO  STATE 4
-                    end
+                end else if ((!as_detected) && (state == 3'b001)) begin
+                    state         <= 3'b100;     // GOTO  STATE 4
+                end
  
-                 // --------------------------------------------------------------
-                 //    STATE 2
-                 // --------------------------------------------------------------
+                // --------------------------------------------------------------
+                //    STATE 2
+                // --------------------------------------------------------------
 
                     else if ((as_detected) && (state == 3'b010)) begin
                         state          <= 3'b011;      // GOTO STATE 3
@@ -665,7 +594,7 @@ always @(posedge buffered_clk or negedge SYS_RST_N) begin
                          state         <= 3'b011;      // STAY IN STATE 3
 
 
-                    else if ((dtack_wishbone ) && (state == 3'b011)) begin
+                    end else if ((dtack_wishbone ) && (state == 3'b011)) begin
                         //state          <= 3'b100;    // GOTO  STATE 4
 
                         latched_data   <= (ram_data | {4{DIP_SW}});  // Read the data
@@ -701,26 +630,24 @@ always @(posedge buffered_clk or negedge SYS_RST_N) begin
                    end
 
              
-                 // --------------------------------------------------------------
-                 //    STATE 5
-                 // --------------------------------------------------------------
+                // --------------------------------------------------------------
+                //    STATE 5
+                // --------------------------------------------------------------
 
-                    else if (as_detected & ( state == 3'b101)) begin
+                else if (as_detected & ( state == 3'b101)) begin
                         state          <= 3'b101;        // Stay in STATE 5
 
-                   end
-
-                   else if (!as_detected & ( state == 3'b101)) begin
+                end else if (!as_detected & ( state == 3'b101)) begin
                         state           <= 3'b000;        // GOTO STATE 0
                         dtack           <= 1'b0;          // Negate dtack
                         ram_enable      <= 1'b0;
 
-                   end
+                end
   
-                 // ---------------------------------------------------------
-                 //    STATE 6
-                 // ---------------------------------------------------------
-					  
+                // ---------------------------------------------------------
+                //    STATE 6
+                // ---------------------------------------------------------
+							  
 		else if(state == 3'b110) begin
 		  if(add_state == 3'b000) begin
 		    ram_enable     <= 1'b1;         // Assert RAM enable

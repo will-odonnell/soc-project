@@ -34,8 +34,8 @@
 
 /* Implementation *************************************************************/
 #pragma hls_design top
-int InitDecode(CFDistance vecNewDistance[6144],
-				_DECISION vecOutputBits[6144],
+int InitDecode(CFDistance vecNewDistance[4800],
+				_DECISION vecOutputBits[4800],
 				int eNewCodingScheme,
 				int eNewChannelType,
 				int iN1, int iN2,
@@ -54,11 +54,11 @@ int			vecTrelMetric1[MC_NUM_STATES];  // Used to be float
 int			vecTrelMetric2[MC_NUM_STATES];	// Used to be float
 int			vecrMetricSet[MC_NUM_OUTPUT_COMBINATIONS];  
 			//Used to be _REAL[16]
-int		    veciTablePuncPat[6144];
-int         veciReturn[6144];
+int		    veciTablePuncPat[4800];
+int         veciReturn[4800];
 int			iNumOutBits;
 int			iNumOutBitsWithMemory;
-_DECISIONTYPE	matdecDecisions[6144][64];
+_DECISIONTYPE	matdecDecisions[4800][64];
 
 	int				iTailbitPattern;
 	int				iTailbitParamL0;
@@ -66,9 +66,9 @@ _DECISIONTYPE	matdecDecisions[6144][64];
 	int				iPartAPatLen;
 	int				iPartBPatLen;
 	int				iPunctCounter;
-	int	veciPuncPatPartA[6144];
-	int	veciPuncPatPartB[6144];
-	int	veciTailBitPat[6144];
+	int	veciPuncPatPartA[16];
+	int	veciPuncPatPartB[16];
+	int	veciTailBitPat[16];
 
 
 	/*-----------------------------------------------------------------------------*/
@@ -404,7 +404,7 @@ MAIN_LOOP:
 		/* Unroll butterflys to avoid loop overhead. For c++ version, the
 		   actual calculation of the trellis update is done here, for MMX
 		   version, only the reordering of the new metrics is done here */
-#if 0		
+#if 1		
 	/* Roll up the loops to help with Catapult synthesis */
 	{
 		int b1,b2,b3,b4,b5,b6;
