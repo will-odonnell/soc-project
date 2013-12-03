@@ -1,6 +1,6 @@
 #include "ViterbiDecoder.h"
 
-_DECISION golden_output[256] = {
+_DECISION golden_output[] = {
 0,
 1,
 1,
@@ -256,8 +256,7 @@ _DECISION golden_output[256] = {
 1,
 0,
 0,
-1};
-/*
+1,
 0,
 1,
 0,
@@ -3496,7 +3495,6 @@ _DECISION golden_output[256] = {
 1,
 1,
 0,
-1,
+1
+};
 
---------------------------------
-*/

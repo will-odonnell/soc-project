@@ -34,8 +34,8 @@
 
 /* Implementation *************************************************************/
 #pragma hls_design top
-int InitDecode(CFDistance vecNewDistance[256],
-				_DECISION vecOutputBits[256],
+int InitDecode(CFDistance vecNewDistance[6144],
+				_DECISION vecOutputBits[6144],
 				int eNewCodingScheme,
 				int eNewChannelType,
 				int iN1, int iN2,
@@ -54,11 +54,11 @@ int			vecTrelMetric1[MC_NUM_STATES];  // Used to be float
 int			vecTrelMetric2[MC_NUM_STATES];	// Used to be float
 int			vecrMetricSet[MC_NUM_OUTPUT_COMBINATIONS];  
 			//Used to be _REAL[16]
-int		    veciTablePuncPat[512];
-int         veciReturn[512];
+int		    veciTablePuncPat[6144];
+int         veciReturn[6144];
 int			iNumOutBits;
 int			iNumOutBitsWithMemory;
-_DECISIONTYPE	matdecDecisions[512][64];
+_DECISIONTYPE	matdecDecisions[6144][64];
 
 	int				iTailbitPattern;
 	int				iTailbitParamL0;
@@ -66,9 +66,9 @@ _DECISIONTYPE	matdecDecisions[512][64];
 	int				iPartAPatLen;
 	int				iPartBPatLen;
 	int				iPunctCounter;
-	int	veciPuncPatPartA[512];
-	int	veciPuncPatPartB[512];
-	int	veciTailBitPat[512];
+	int	veciPuncPatPartA[6144];
+	int	veciPuncPatPartB[6144];
+	int	veciTailBitPat[6144];
 
 
 	/*-----------------------------------------------------------------------------*/
