@@ -121,6 +121,7 @@ reg        add_req;
 reg        add_ack;
 
 reg [1:0]  memwrite_index;
+reg [2:0]  vd_state;
 
 // -------------------------------------------------------------------
 // VITERBI CONTROL REGISTERS
@@ -175,7 +176,7 @@ assign          buffered_clk = MZ_CPLD_CLKO;     // Clock from CPLD
 //assign          buffered_clk = FPGA_CLK3;       // 100 MHz clock
 //assign          buffered_clk = SYS_CLK;         // 24 MHz FPGA clock
 
-assign		vd_start = reg_run[0];
+reg		vd_start;
 wire		vd_ready;
 wire		vd_done;
 
@@ -574,6 +575,7 @@ always @(posedge buffered_clk or negedge SYS_RST_N) begin
                 dtack            <= 1'b0;      // Negate dtack to CPLD                               
           	add_state        <= 3'b0;
 		memwrite_index   <= 2'b0;
+                vd_state         <= 3'b0;
 
 		ram_in0_enable_select <= 1'b0;
 		ram_in1_enable_select <= 1'b0;
@@ -695,7 +697,11 @@ always @(posedge buffered_clk or negedge SYS_RST_N) begin
                         latched_data   <= (ram_data | {4{DIP_SW}});  // Read the data
 	             	
 			if((latched_addr[10:2] == 9'b0)) begin
+			    if (reg_run == 1'b1) begin
+		        	state <= 3'b110;
+                            end else begin
 				state <= 3'b110;
+                            end
 		     	end
 			else begin
 				state <= 3'b100;
@@ -735,6 +741,58 @@ always @(posedge buffered_clk or negedge SYS_RST_N) begin
                 // ---------------------------------------------------------
 							  
 		else if(state == 3'b110) begin
+		  
+		  // State 0 - start Viterbi if ready, otherwise wait.
+                  if (vd_state == 3'b000) begin
+
+                    if (vd_ready == 1'b1) begin
+		      vd_start <= 1'b1;
+                      vd_state <= 3'b001;
+		      
+                      ram_in0_enable_select <= 1'b1;
+		      ram_in1_enable_select <= 1'b1;
+		      ram_out_enable_select <= 1'b1;
+
+		      ram_in0_write_select <= 1'b1;
+		      ram_in1_write_select <= 1'b1;
+		      ram_out_write_select <= 1'b1;
+
+		      ram_in0_addr_select <= 1'b1;
+		      ram_in1_addr_select <= 1'b1;
+		      ram_out_addr_select <= 1'b1;
+
+                    end else begin
+		      vd_state <= 3'b000;
+		    end
+		  end
+
+		  // State 1 - Viterbi running, wait for it to complete.
+                  else if (vd_state == 3'b001) begin
+
+		    if (vd_done == 1'b1) begin
+		      // Decode complete.
+		      vd_state <= 3'b000;
+		      state <= 3'b100; 
+
+                      ram_in0_enable_select <= 1'b0;
+		      ram_in1_enable_select <= 1'b0;
+		      ram_out_enable_select <= 1'b0;
+
+		      ram_in0_write_select <= 1'b0;
+		      ram_in1_write_select <= 1'b0;
+		      ram_out_write_select <= 1'b0;
+
+		      ram_in0_addr_select <= 1'b0;
+		      ram_in1_addr_select <= 1'b0;
+		      ram_out_addr_select <= 1'b0;
+
+                    end else begin
+		      vd_state <= 3'b001;
+		
+                    end
+                  end
+
+/*
 		  if(add_state == 3'b000) begin
 		    ram_enable     <= 1'b1;         // Assert RAM enable
 		    latched_addr[10:2]   <= 9'h001;  // Latch address bus
@@ -757,6 +815,7 @@ always @(posedge buffered_clk or negedge SYS_RST_N) begin
 		    ram_enable <= 1'b0;
 		    state <= 3'b100;
 		  end
+*/
 		end
                                      
             end         //  END of MAIN CONTROL LOOP
