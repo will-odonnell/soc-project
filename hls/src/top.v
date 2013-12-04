@@ -269,12 +269,12 @@ assign		ram_in1_datain  = (memwrite_index == 2'b00) ? mz_buf_data_0 : // [7:0]
 			          (memwrite_index == 2'b10) ? mz_buf_data_2 : // [23:16]
 			                                      mz_buf_data_3;  // [31:24]
 
-assign		ram_in0_addr    = (memwrite_index == 2'b00) ? latched_addr         : // [00]
+assign		ram_in0_arm_addr= (memwrite_index == 2'b00) ? latched_addr         : // [00]
 			          (memwrite_index == 2'b01) ? latched_addr + 2'b01 : // [01]
 			          (memwrite_index == 2'b10) ? latched_addr + 2'b10 : // [10]
 			                                      latched_addr + 2'b11;  // [11]
 
-assign		ram_in1_addr    = (memwrite_index == 2'b00) ? latched_addr         : // [00]
+assign		ram_in1_arm_addr= (memwrite_index == 2'b00) ? latched_addr         : // [00]
 			          (memwrite_index == 2'b01) ? latched_addr + 2'b01 : // [01]
 			          (memwrite_index == 2'b10) ? latched_addr + 2'b10 : // [10]
 			                                      latched_addr + 2'b11;  // [11]
@@ -314,21 +314,21 @@ InitDecode Viterbi(
   .InitDecode_return_triosy_lz(),
   .clk(MZ_CPLD_CLKO),
   .rst(SYS_RST_N),
-  .vecNewDistance_rTow0_rsc_dualport_data_in(ram_in0_datain),
-  .vecNewDistance_rTow0_rsc_dualport_addr(ram_in0_addr),
+  .vecNewDistance_rTow0_rsc_dualport_data_in(),
+  .vecNewDistance_rTow0_rsc_dualport_addr(ram_in0_vd_addr),
   .vecNewDistance_rTow0_rsc_dualport_re(ram_in0_enable),
   .vecNewDistance_rTow0_rsc_dualport_we(ram_in0_write),
-  .vecNewDistance_rTow0_rsc_dualport_data_out(ram_in0_dataout),
-  .vecNewDistance_rTow1_rsc_dualport_data_in(ram_in1_datain),
-  .vecNewDistance_rTow1_rsc_dualport_addr(ram_in1_addr),
+  .vecNewDistance_rTow0_rsc_dualport_data_out(ram_in0_vd_dataout),
+  .vecNewDistance_rTow1_rsc_dualport_data_in(),
+  .vecNewDistance_rTow1_rsc_dualport_addr(ram_in1_vd_addr),
   .vecNewDistance_rTow1_rsc_dualport_re(ram_in1_enable),
   .vecNewDistance_rTow1_rsc_dualport_we(ram_in1_write),
-  .vecNewDistance_rTow1_rsc_dualport_data_out(ram_in1_dataout),
-  .vecOutputBits_rsc_dualport_data_in(ram_out_datain),
-  .vecOutputBits_rsc_dualport_addr(ram_out_addr),
+  .vecNewDistance_rTow1_rsc_dualport_data_out(ram_in1_vd_dataout),
+  .vecOutputBits_rsc_dualport_data_in(ram_out_vd_datain),
+  .vecOutputBits_rsc_dualport_addr(ram_out_vd_addr),
   .vecOutputBits_rsc_dualport_re(ram_out_enable),
   .vecOutputBits_rsc_dualport_we(ram_out_write),
-  .vecOutputBits_rsc_dualport_data_out(ram_out_dataout)
+  .vecOutputBits_rsc_dualport_data_out()
 );
 
 
@@ -426,14 +426,12 @@ mem_8x6144 ram_input_rTow1   (
 // Buffer for rTow1 inputs
 RAMB16_S1 ram_output   (   
                  .DI(ram_out_datain),    // 8-bit data_in bus
-                 .DIP(1'b0),               // 4-bit parity data_in bus 
                  .ADDR(ram_out_addr), // 11-bit address bus + 2 for chip select
                  .EN(ram_out_enable),          // RAM enable signal
                  .WE(ram_out_write),        // Write enable signal
                  .SSR(1'b0),               // set/reset signal
                  .CLK(!buffered_clk ),     // clock signal
-                 .DO(ram_out_dataout),       // 8-bit data_out bus
-                 .DOP(parity_out[0])       // 1-bit parity data_out bus 
+                 .DO(ram_out_dataout)       // 8-bit data_out bus
 );
 
 
