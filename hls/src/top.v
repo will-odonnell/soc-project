@@ -142,18 +142,18 @@ reg [31:0] reg_lvl;	// iLevel			0x0030
 // -------------------------------------------------------------------
 
 
-       // This assignment puts the latched address back out on the data lines.
-
-//wire [31:0]     MZ_BUF_DATA = (MZ_CPLD_RW && MZ_CPLD_AS) ? latched_addr : 32'bz; 
-
-       // This assignment puts the latched address back out on the data lines.
-   
+// This assignment puts the latched address back out on the data lines.
 wire [31:0]     MZ_BUF_DATA = (MZ_CPLD_RW && MZ_CPLD_AS) ? latched_data : 32'bz; 
 
 
-       // This assignment puts the SWITCHES back out on the data bus lines.
-
+// This assignment puts the SWITCHES back out on the data bus lines.
 //wire [31:0]     MZ_BUF_DATA = (MZ_CPLD_RW && MZ_CPLD_AS) ? {4{DIP_SW}} : 32'bz;            
+
+// This assignment splits the input data into 8-bit segments.
+wire [7:0]	mz_buf_data_0 = MZ_BUF_DATA[7:0];
+wire [15:8]	mz_buf_data_1 = MZ_BUF_DATA[15:8];
+wire [23:16]	mz_buf_data_2 = MZ_BUF_DATA[23:16];
+wire [31:24]	mz_buf_data_3 = MZ_BUF_DATA[31:24];
 
            
 // -------------------------------------------------------------------
@@ -177,26 +177,41 @@ assign		vd_start = reg_run[0];
 wire		vd_ready;
 wire		vd_done;
 
-// Wires between block rams and viterbi
-wire	[15:0]	r0vd_datain;
-wire	[15:0]	r0vd_dataout;
-wire		r0vd_re;
-wire		r0vd_we;
-wire	[25:0]	r0vd_addr;
+// Wires connecting to block rams from ARM and Viterbi
+wire	[15:0]	ram_in0_datain;		// Input data from ARM
+wire	[15:0]	ram_in0_dataout;	// Output data to Viterbi
+wire		ram_in0_enable;		// Memory enable from mux - selects between ARM and VD 
+wire		ram_in0_write;		// Write enable from mux - selects between ARM and VD
+wire	[25:0]	ram_in0_addr;		// Addr line from mux - selects between ARM and VD
 
-wire	[15:0]	r1vd_datain;
-wire	[15:0]	r1vd_dataout;
-wire		r1vd_re;
-wire		r1vd_we;
-wire	[25:0]	r1vd_addr;
+wire	[15:0]	ram_in1_datain;		// Input data from ARM
+wire	[15:0]	ram_in1_dataout;	// Output data to Viterbi
+wire		ram_in1_enable;		// Memory enable from mux - selects between ARM and VD 
+wire		ram_in1_write;		// Write enable from mux - selects between ARM and VD
+wire	[25:0]	ram_in1_addr;		// Addr line from mux - selects between ARM and VD
 
-wire	[15:0]	robvd_datain;
-wire	[15:0]	robvd_dataout;
-wire		robvd_re;
-wire		robvd_we;
-wire	[25:0]	robvd_addr;
+wire	[15:0]	ram_out_datain;		// Input data from ARM
+wire	[15:0]	ram_out_dataout;	// Output data to Viterbi
+wire		ram_out_enable;		// Memory enable from mux - selects between ARM and VD 
+wire		ram_out_write;		// Write enable from mux - selects between ARM and VD
+wire	[25:0]	ram_out_addr;		// Addr line from mux - selects between ARM and VD
 
+reg		ram_in0_enable_select;
+reg		ram_in1_enable_select;
+reg		ram_out_enable_select;
+
+reg		ram_in0_write_select;
+reg		ram_in1_write_select;
+reg		ram_out_write_select;
+
+reg		ram_in0_addr_select;
+reg		ram_in1_addr_select;
+reg		ram_out_addr_select;
+
+
+// ----------------------------------------------------------------------------
 // Mux signals for rams
+// ----------------------------------------------------------------------------
 assign		ram_in0_enable = (ram_in0_enable_select == 0) ? ram_in0_arm_enable  : ram_in0_vd_enable; 
 assign		ram_in1_enable = (ram_in1_enable_select == 0) ? ram_in1_arm_enable  : ram_in1_vd_enable; 
 assign		ram_out_enable = (ram_out_enable_select == 0) ? ram_out_arm_enable  : ram_out_vd_enable; 
@@ -329,40 +344,40 @@ RAMB16_S9 U_RAMB16_S9_A   (
 
 // Buffer for rTow0 inputs
 mem_8x6144 ram_input_rTow0   (   
-                 .DI(MZ_BUF_DATA[7:0]),    // 8-bit data_in bus
+                 .DI(ram_in0_datain),    // 8-bit data_in bus
                  .DIP(1'b0),               // 4-bit parity data_in bus 
                  .ADDR(ram_in0_addr), // 11-bit address bus + 2 for chip select
                  .EN(ram_in0_enable),          // RAM enable signal
                  .WE(ram_in0_write),        // Write enable signal
                  .SSR(1'b0),               // set/reset signal
                  .CLK(!buffered_clk ),     // clock signal
-                 .DO(ram_data[7:0]),       // 8-bit data_out bus
+                 .DO(ram_in0_dataout),       // 8-bit data_out bus
                  .DOP(parity_out[0])       // 1-bit parity data_out bus 
 );
 
 // Buffer for rTow1 inputs
 mem_8x6144 ram_input_rTow1   (   
-                 .DI(MZ_BUF_DATA[7:0]),    // 8-bit data_in bus
+                 .DI(ram_in1_datain),    // 8-bit data_in bus
                  .DIP(1'b0),               // 4-bit parity data_in bus 
                  .ADDR(ram_in1_addr), // 11-bit address bus + 2 for chip select
                  .EN(ram_in1_enable),          // RAM enable signal
                  .WE(ram_in1_write),        // Write enable signal
                  .SSR(1'b0),               // set/reset signal
                  .CLK(!buffered_clk ),     // clock signal
-                 .DO(ram_data[7:0]),       // 8-bit data_out bus
+                 .DO(ram_in1_dataout),       // 8-bit data_out bus
                  .DOP(parity_out[0])       // 1-bit parity data_out bus 
 );
 
 // Buffer for rTow1 inputs
 RAMB16_S1 ram_output   (   
-                 .DI(robvd_dataout),    // 8-bit data_in bus
+                 .DI(ram_out_datain),    // 8-bit data_in bus
                  .DIP(1'b0),               // 4-bit parity data_in bus 
                  .ADDR(ram_out_addr), // 11-bit address bus + 2 for chip select
                  .EN(ram_out_enable),          // RAM enable signal
                  .WE(ram_out_write),        // Write enable signal
                  .SSR(1'b0),               // set/reset signal
                  .CLK(!buffered_clk ),     // clock signal
-                 .DO(ram_data[7:0]),       // 8-bit data_out bus
+                 .DO(ram_out_dataout),       // 8-bit data_out bus
                  .DOP(parity_out[0])       // 1-bit parity data_out bus 
 );
 
@@ -504,7 +519,21 @@ always @(posedge buffered_clk or negedge SYS_RST_N) begin
             if (!SYS_RST_N)  begin             // In RESET
                 state            <= 3'b0;      // Start in State 0
                 dtack            <= 1'b0;      // Negate dtack to CPLD                               
-					 add_state        <= 3'b0;
+          	add_state        <= 3'b0;
+		memwrite_state   <= 2'b0;
+
+		ram_in0_enable_select <= 1'b0;
+		ram_in1_enable_select <= 1'b0;
+		ram_out_enable_select <= 1'b0;
+
+		ram_in0_write_select <= 1'b0;
+		ram_in1_write_select <= 1'b0;
+		ram_out_write_select <= 1'b0;
+
+		ram_in0_addr_select <= 1'b0;
+		ram_in1_addr_select <= 1'b0;
+		ram_out_addr_select <= 1'b0;
+
              end
         
         // --------------------------------------------------------------
@@ -513,30 +542,30 @@ always @(posedge buffered_clk or negedge SYS_RST_N) begin
 
             else if (SYS_RST_N) begin 
 
-                 // --------------------------------------------------------------
-                 //    STATE 0
-                 // --------------------------------------------------------------
+                // --------------------------------------------------------------
+                //    STATE 0
+                // --------------------------------------------------------------
 
-                    if ((as_detected) && (state == 3'b000)) begin
-                        state          <= 3'b001;       // GOTO STATE 1
-                        ram_enable     <= 1'b1;         // Assert RAM enable
-                        latched_addr   <= MZ_BUF_ADDR;  // Latch address bus
-                      end
-                    
-                    else if ((!as_detected) && (state == 3'b000)) begin
-                        state          <= 3'b000;        // Stay in STATE 0
-                        ram_enable     <= 1'b0;
-                        dtack          <= 1'b0;          // Negate dtack
-                    end
+                if ((as_detected) && (state == 3'b000)) begin
+                    state          <= 3'b001;       // GOTO STATE 1
+                    ram_enable     <= 1'b1;         // Assert RAM enable
+                    latched_addr   <= MZ_BUF_ADDR;  // Latch address bus
+               
+		end else if ((!as_detected) && (state == 3'b000)) begin
+                    state          <= 3'b000;        // Stay in STATE 0
+                    ram_enable     <= 1'b0;
+                    dtack          <= 1'b0;          // Negate dtack
+                end
 
                 // --------------------------------------------------------------
                 //    STATE 1
                 // --------------------------------------------------------------
 
              	else if ((as_detected) && (state == 3'b001)) begin
-                    state         <= 3'b010;      // GOTO STATE 2
 
+		    // For control registers, just write to the register directly.
 		    if (latched_addr[15:12] == 0 ) begin
+                    	state         <= 3'b010;      // GOTO STATE 2
 		        case (latched_addr[7:0])
 			    // Control Register
 			    8'h00: reg_run <= MZ_BUF_DATA;		
@@ -552,17 +581,48 @@ always @(posedge buffered_clk or negedge SYS_RST_N) begin
 			    8'h2C: reg_pppb   <= MZ_BUF_DATA;
 			    8'h30: reg_lvl    <= MZ_BUF_DATA;
 			endcase		        
+
+		    // Write the data to memory.  
 		    end else begin
-     
+    		    	   
                         ram_write[0]  <= !MZ_CPLD_MISC12 && !MZ_CPLD_BYTE_N[0];
                         ram_write[1]  <= !MZ_CPLD_MISC12 && !MZ_CPLD_BYTE_N[1];
                         ram_write[2]  <= !MZ_CPLD_MISC12 && !MZ_CPLD_BYTE_N[2];
                         ram_write[3]  <= !MZ_CPLD_MISC12 && !MZ_CPLD_BYTE_N[3];
-                        
-//                        ram_write[0]  <= !MZ_CPLD_RW && !MZ_CPLD_BYTE_N[0];
-//                        ram_write[1]  <= !MZ_CPLD_RW && !MZ_CPLD_BYTE_N[1];
-//                        ram_write[2]  <= !MZ_CPLD_RW && !MZ_CPLD_BYTE_N[2];
-//                        ram_write[3]  <= !MZ_CPLD_RW && !MZ_CPLD_BYTE_N[3];
+			
+		        if (memwrite_state == 2'b00) begin
+			    state <= 3'b001;
+			    memwrite_state <= 2'b01;
+			    ram_in0_datain <= mz_buf_data_0;
+			    ram_in1_datain <= mz_buf_data_0;
+		            ram_in0_arm_addr <= latched_addr;
+		            ram_in1_arm_addr <= latched_addr;
+			
+			end else if (memwrite_state == 2'b01) begin	                        
+			    state <= 3'b001;
+			    memwrite_state <= 2'b10;
+			    ram_in0_datain <= mz_buf_data_1;
+			    ram_in1_datain <= mz_buf_data_1;
+		            ram_in0_arm_addr <= latched_addr + 2'b01;
+		            ram_in1_arm_addr <= latched_addr + 2'b01;
+
+			end else if (memwrite_state == 2'b10) begin	                        
+			    state <= 3'b001;
+			    memwrite_state <= 2'b11;
+			    ram_in0_datain <= mz_buf_data_2;
+			    ram_in1_datain <= mz_buf_data_2;
+		            ram_in0_arm_addr <= latched_addr + 2'b10;
+		            ram_in1_arm_addr <= latched_addr + 2'b10;
+
+			end else if (memwrite_state == 2'b11) begin	                        
+			    state <= 3'b010;
+			    memwrite_state <= 2'b00;
+			    ram_in0_datain <= mz_buf_data_3;
+			    ram_in1_datain <= mz_buf_data_3;
+		            ram_in0_arm_addr <= latched_addr + 2'b11;
+		            ram_in1_arm_addr <= latched_addr + 2'b11;
+			end
+
                     end
                         
                 end else if ((!as_detected) && (state == 3'b001)) begin
@@ -595,20 +655,9 @@ always @(posedge buffered_clk or negedge SYS_RST_N) begin
 
 
                     end else if ((dtack_wishbone ) && (state == 3'b011)) begin
-                        //state          <= 3'b100;    // GOTO  STATE 4
-
                         latched_data   <= (ram_data | {4{DIP_SW}});  // Read the data
-/*
-                        feedback_addr   <= {
-                                           DIP_SW[7:0],
-                                           MZ_CPLD_MISC6,
-                                           MZ_CPLD_MISC9,
-                                           MZ_CPLD_MISC10,
-                                           MZ_CPLD_MISC12,
-                                           MZ_BUF_ADDR[19:0]
-                                           };
- */
-	             	if((latched_addr[10:2] == 9'b0)) begin
+	             	
+			if((latched_addr[10:2] == 9'b0)) begin
 				state <= 3'b110;
 		     	end
 			else begin
