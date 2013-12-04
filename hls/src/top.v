@@ -120,6 +120,8 @@ reg [2:0]  add_state;
 reg        add_req;
 reg        add_ack;
 
+reg [1:0]  memwrite_index;
+
 // -------------------------------------------------------------------
 // VITERBI CONTROL REGISTERS
 // -------------------------------------------------------------------
@@ -196,6 +198,9 @@ wire		ram_out_enable;		// Memory enable from mux - selects between ARM and VD
 wire		ram_out_write;		// Write enable from mux - selects between ARM and VD
 wire	[25:0]	ram_out_addr;		// Addr line from mux - selects between ARM and VD
 
+// ----------------------------------------------------------------------------
+// Mux select lines
+// ----------------------------------------------------------------------------  
 reg		ram_in0_enable_select;
 reg		ram_in1_enable_select;
 reg		ram_out_enable_select;
@@ -207,6 +212,33 @@ reg		ram_out_write_select;
 reg		ram_in0_addr_select;
 reg		ram_in1_addr_select;
 reg		ram_out_addr_select;
+
+// ----------------------------------------------------------------------------- 
+// Memory mux signals
+// ----------------------------------------------------------------------------- 
+wire		ram_in0_arm_addr;
+wire		ram_in1_arm_addr;
+wire		ram_out_arm_addr;
+
+wire		ram_in0_arm_enable;
+wire		ram_in1_arm_enable;
+wire		ram_out_arm_enable;
+
+wire		ram_in0_arm_write;
+wire		ram_in1_arm_write;
+wire		ram_out_arm_write;
+
+wire		ram_in0_vd_addr;
+wire		ram_in1_vd_addr;
+wire		ram_out_vd_addr;
+
+wire		ram_in0_vd_enable;
+wire		ram_in1_vd_enable;
+wire		ram_out_vd_enable;
+
+wire		ram_in0_vd_write;
+wire		ram_in1_vd_write;
+wire		ram_out_vd_write;
 
 
 // ----------------------------------------------------------------------------
@@ -223,6 +255,29 @@ assign		ram_out_write  = (ram_out_write_select == 0)  ? ram_out_arm_write   : ra
 assign		ram_in0_addr   = (ram_in0_addr_select == 0)   ? ram_in0_arm_addr  : ram_in0_vd_addr; 
 assign		ram_in1_addr   = (ram_in1_addr_select == 0)   ? ram_in1_arm_addr  : ram_in1_vd_addr; 
 assign		ram_out_addr   = (ram_out_addr_select == 0)   ? ram_out_arm_addr  : ram_out_vd_addr; 
+
+// ----------------------------------------------------------------------------
+// Data line segments for RAM 
+// ----------------------------------------------------------------------------
+assign		ram_in0_datain  = (memwrite_index == 2'b00) ? mz_buf_data_0 : // [7:0]
+			          (memwrite_index == 2'b01) ? mz_buf_data_1 : // [15:8]
+			          (memwrite_index == 2'b10) ? mz_buf_data_2 : // [23:16]
+			                                      mz_buf_data_3;  // [31:24]
+
+assign		ram_in1_datain  = (memwrite_index == 2'b00) ? mz_buf_data_0 : // [7:0]
+			          (memwrite_index == 2'b01) ? mz_buf_data_1 : // [15:8]
+			          (memwrite_index == 2'b10) ? mz_buf_data_2 : // [23:16]
+			                                      mz_buf_data_3;  // [31:24]
+
+assign		ram_in0_addr    = (memwrite_index == 2'b00) ? latched_addr         : // [00]
+			          (memwrite_index == 2'b01) ? latched_addr + 2'b01 : // [01]
+			          (memwrite_index == 2'b10) ? latched_addr + 2'b10 : // [10]
+			                                      latched_addr + 2'b11;  // [11]
+
+assign		ram_in1_addr    = (memwrite_index == 2'b00) ? latched_addr         : // [00]
+			          (memwrite_index == 2'b01) ? latched_addr + 2'b01 : // [01]
+			          (memwrite_index == 2'b10) ? latched_addr + 2'b10 : // [10]
+			                                      latched_addr + 2'b11;  // [11]
 
 
 // -------------------------------------------------------------------
@@ -259,21 +314,21 @@ InitDecode Viterbi(
   .InitDecode_return_triosy_lz(),
   .clk(MZ_CPLD_CLKO),
   .rst(SYS_RST_N),
-  .vecNewDistance_rTow0_rsc_dualport_data_in(r0vd_datain),
-  .vecNewDistance_rTow0_rsc_dualport_addr(r0vd_addr),
-  .vecNewDistance_rTow0_rsc_dualport_re(r0vd_re),
-  .vecNewDistance_rTow0_rsc_dualport_we(r0vd_we),
-  .vecNewDistance_rTow0_rsc_dualport_data_out(r0vd_dataout),
-  .vecNewDistance_rTow1_rsc_dualport_data_in(r1vd_datain),
-  .vecNewDistance_rTow1_rsc_dualport_addr(r1vd_addr),
-  .vecNewDistance_rTow1_rsc_dualport_re(r1vd_re),
-  .vecNewDistance_rTow1_rsc_dualport_we(r1vd_we),
-  .vecNewDistance_rTow1_rsc_dualport_data_out(r1vd_dataout),
-  .vecOutputBits_rsc_dualport_data_in(robvd_datain),
-  .vecOutputBits_rsc_dualport_addr(robvd_addr),
-  .vecOutputBits_rsc_dualport_re(robvd_re),
-  .vecOutputBits_rsc_dualport_we(robvd_we),
-  .vecOutputBits_rsc_dualport_data_out(robvd_dataout)
+  .vecNewDistance_rTow0_rsc_dualport_data_in(ram_in0_datain),
+  .vecNewDistance_rTow0_rsc_dualport_addr(ram_in0_addr),
+  .vecNewDistance_rTow0_rsc_dualport_re(ram_in0_enable),
+  .vecNewDistance_rTow0_rsc_dualport_we(ram_in0_write),
+  .vecNewDistance_rTow0_rsc_dualport_data_out(ram_in0_dataout),
+  .vecNewDistance_rTow1_rsc_dualport_data_in(ram_in1_datain),
+  .vecNewDistance_rTow1_rsc_dualport_addr(ram_in1_addr),
+  .vecNewDistance_rTow1_rsc_dualport_re(ram_in1_enable),
+  .vecNewDistance_rTow1_rsc_dualport_we(ram_in1_write),
+  .vecNewDistance_rTow1_rsc_dualport_data_out(ram_in1_dataout),
+  .vecOutputBits_rsc_dualport_data_in(ram_out_datain),
+  .vecOutputBits_rsc_dualport_addr(ram_out_addr),
+  .vecOutputBits_rsc_dualport_re(ram_out_enable),
+  .vecOutputBits_rsc_dualport_we(ram_out_write),
+  .vecOutputBits_rsc_dualport_data_out(ram_out_dataout)
 );
 
 
@@ -520,7 +575,7 @@ always @(posedge buffered_clk or negedge SYS_RST_N) begin
                 state            <= 3'b0;      // Start in State 0
                 dtack            <= 1'b0;      // Negate dtack to CPLD                               
           	add_state        <= 3'b0;
-		memwrite_state   <= 2'b0;
+		memwrite_index   <= 2'b0;
 
 		ram_in0_enable_select <= 1'b0;
 		ram_in1_enable_select <= 1'b0;
@@ -590,37 +645,21 @@ always @(posedge buffered_clk or negedge SYS_RST_N) begin
                         ram_write[2]  <= !MZ_CPLD_MISC12 && !MZ_CPLD_BYTE_N[2];
                         ram_write[3]  <= !MZ_CPLD_MISC12 && !MZ_CPLD_BYTE_N[3];
 			
-		        if (memwrite_state == 2'b00) begin
+		        if (memwrite_index == 2'b00) begin
 			    state <= 3'b001;
-			    memwrite_state <= 2'b01;
-			    ram_in0_datain <= mz_buf_data_0;
-			    ram_in1_datain <= mz_buf_data_0;
-		            ram_in0_arm_addr <= latched_addr;
-		            ram_in1_arm_addr <= latched_addr;
+			    memwrite_index <= 2'b01;
 			
-			end else if (memwrite_state == 2'b01) begin	                        
+			end else if (memwrite_index == 2'b01) begin	                        
 			    state <= 3'b001;
-			    memwrite_state <= 2'b10;
-			    ram_in0_datain <= mz_buf_data_1;
-			    ram_in1_datain <= mz_buf_data_1;
-		            ram_in0_arm_addr <= latched_addr + 2'b01;
-		            ram_in1_arm_addr <= latched_addr + 2'b01;
+			    memwrite_index <= 2'b10;
 
-			end else if (memwrite_state == 2'b10) begin	                        
+			end else if (memwrite_index == 2'b10) begin	                        
 			    state <= 3'b001;
-			    memwrite_state <= 2'b11;
-			    ram_in0_datain <= mz_buf_data_2;
-			    ram_in1_datain <= mz_buf_data_2;
-		            ram_in0_arm_addr <= latched_addr + 2'b10;
-		            ram_in1_arm_addr <= latched_addr + 2'b10;
+			    memwrite_index <= 2'b11;
 
-			end else if (memwrite_state == 2'b11) begin	                        
+			end else if (memwrite_index == 2'b11) begin	                        
 			    state <= 3'b010;
-			    memwrite_state <= 2'b00;
-			    ram_in0_datain <= mz_buf_data_3;
-			    ram_in1_datain <= mz_buf_data_3;
-		            ram_in0_arm_addr <= latched_addr + 2'b11;
-		            ram_in1_arm_addr <= latched_addr + 2'b11;
+			    memwrite_index <= 2'b00;
 			end
 
                     end
