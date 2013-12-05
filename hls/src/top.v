@@ -280,6 +280,8 @@ assign		ram_in1_arm_addr= (memwrite_index == 2'b00) ? latched_addr         : // 
 			          (memwrite_index == 2'b10) ? latched_addr + 2'b10 : // [10]
 			                                      latched_addr + 2'b11;  // [11]
 
+assign		ram_in0_vd_dataout = ram_in0_dataout;
+assign		ram_in1_vd_dataout = ram_in1_dataout;
 
 // -------------------------------------------------------------------
 //
@@ -605,6 +607,19 @@ always @(posedge buffered_clk or negedge SYS_RST_N) begin
                     state          <= 3'b001;       // GOTO STATE 1
                     ram_enable     <= 1'b1;         // Assert RAM enable
                     latched_addr   <= MZ_BUF_ADDR;  // Latch address bus
+                      
+		    ram_in0_enable_select <= 1'b0;
+		    ram_in1_enable_select <= 1'b0;
+		    ram_out_enable_select <= 1'b0;
+
+		    ram_in0_write_select <= 1'b0;
+		    ram_in1_write_select <= 1'b0;
+		    ram_out_write_select <= 1'b0;
+
+		    ram_in0_addr_select <= 1'b0;
+		    ram_in1_addr_select <= 1'b0;
+		    ram_out_addr_select <= 1'b0;
+
                
 		end else if ((!as_detected) && (state == 3'b000)) begin
                     state          <= 3'b000;        // Stay in STATE 0
