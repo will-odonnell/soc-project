@@ -34,7 +34,8 @@ set synlib  "/usr/local/packages/synopsys_2009/syn/libraries/syn/dw_foundation.s
 set typlib  "/scratch/wodonnell/mp/Artisan/synopsys/typical.db"
 set symbol_library "/scratch/wodonnell/mp/Artisan/symbols/synopsys/tsmc18.sdb"
 set physical_library "/scratch/wodonnell/mp/Artisan/synopsys/tsmc18_6lm.pdb"
-set vd_syndir "/scratch/wodonnell/soc/soc-project/dc/src/InitDecode.v3"
+set vd_syndir "/scratch/wodonnell/soc/soc-project/dc/src/InitDecode.v29"
+set vd_srcdir "/scratch/wodonnell/soc/soc-project/hls/src"
 
 read_lib /scratch/wodonnell/mp/Artisan/synopsys/tsmc18_6lm.plib -no_warnings
 read_lib /scratch/wodonnell/mp/Artisan/synopsys/typical.lib -no_warnings
@@ -66,7 +67,9 @@ foreach file $fileList {
     read_file -format verilog $file
 }
 
-read_file -format verilog $vd_syndir/rtl.v
+read_file -format verilog $vd_srcdir/memory.v
+read_file -format verilog $vd_srcdir/top.v
+
 
 # Link the design with the libraries.
 link
@@ -109,13 +112,13 @@ set_output_delay -max  $OUTPUT_EXT_DELAY -clock clk [all_outputs]
 
 
 #Set isolate ports on all inputs
-set_isolate_ports [all_inputs] -force 
+#set_isolate_ports [all_inputs] -force 
 
 #Set driving cell on all inputs
 set_driving_cell -lib_cell INVX4 [all_inputs]
 
 #Set isolate ports on all outputs
-set_isolate_ports [all_outputs] -force
+#set_isolate_ports [all_outputs] -force
 
 
 #Set load on all outputs
