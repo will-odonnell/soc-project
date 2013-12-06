@@ -277,58 +277,47 @@ fflush(pFile);
 				BitDeinterleaver[piInterlSequ[j]].Deinterleave(fvecMetric);
 
 
+#if USE_VITERBI_HARDWARE
+            // initialize the accelerator registers
+            address = base + ((reg_ncs & MAP_MASK)>>2);     *address = eNewCodingScheme;
+            address = base + ((reg_nct & MAP_MASK)>>2);     *address = eNewChannelType;
+            address = base + ((reg_n1 & MAP_MASK)>>2);      *address = iN[0];
+            address = base + ((reg_n2 & MAP_MASK)>>2);      *address = iN[1];
+            address = base + ((reg_nnobpa & MAP_MASK)>>2);  *address = iM[ilv][0];
+            address = base + ((reg_nnobpb & MAP_MASK)>>2);  *address = iM[ilv][1];
+            address = base + ((reg_pppa & MAP_MASK)>>2);    *address = iCodeRate[ilv][0];
+            address = base + ((reg_pppb & MAP_MASK)>>2);    *address = iCodeRate[ilv][1];
+            address = base + ((reg_lvl & MAP_MASK)>>2);     *address = ilv;
+
+            // Loop through all elements of the input vector
+            // Reads four elements from input vector, masks off the upper 24-bits, then shifts
+            // the input to the correct bit location for transport.
+            for(i=0;i<size;i=i+4) {                                   // Inc every 4th element
+                *(address++) = (vecNewDistance[i+0].rTow0 & 0xFF)       | // [0] -> [7:0]
+                               (vecNewDistance[i+1].rTow0 & 0xFF) << 8  | // [1] -> [15:8]
+                               (vecNewDistance[i+2].rTow0 & 0xFF) << 16 | // [2] -> [23:16]
+                               (vecNewDistance[i+3].rTow0 & 0xFF) << 24 ; // [3] -> [31:24]     
+
+                *(address2++)= (vecNewDistance[i+0].rTow1 & 0xFF)       |
+                               (vecNewDistance[i+1].rTow1 & 0xFF) << 8  |
+                               (vecNewDistance[i+2].rTow1 & 0xFF) << 16 |
+                               (vecNewDistance[i+3].rTow1 & 0xFF) << 24 ;
+
+            
+            // Kick off Viterbi decode
+            address = base + ((reg_ctrl & MAP_MASK)>>2);     *address = 0x1;
+
+            // Poll on status signal and wait for decode complete
+            address = base + ((reg_sts & MAP_MASK)>>2);
+            while (*address & 0x1 == 0x1) {};
+
+#else
 			/* Viterbi decoder ---------------------------------------------- */
-			{
-				int ivec = 0;
-
-				// Declare the file handlers.
-				ofstream goldenInput_rTow0;
-				ofstream goldenInput_rTow1;
-				
-				// Read input buffer
-				goldenInput_rTow0.open("goldenInput_rTow0.txt");
-				goldenInput_rTow1.open("goldenInput_rTow1.txt");
-				
-				goldenInput_rTow0 << "iLevel = " << j << "\n";
-				goldenInput_rTow1 << "iLevel = " << j << "\n";
-				for(ivec=0; ivec<fvecMetric.Size(); ivec++) {
-					goldenInput_rTow0 << (double) fvecMetric[ivec].rTow0 <<",";
-					goldenInput_rTow1 << (double) fvecMetric[ivec].rTow1 <<","; 
-				
-					if(ivec % 16 == 0) {
-						goldenInput_rTow0 << "\n";
-						goldenInput_rTow1 << "\n";
-					}
-				}
-				goldenInput_rTow0 << "\n\n" << "--------------------------------\n";
-				goldenInput_rTow1 << "\n\n" << "--------------------------------\n";
-				goldenInput_rTow0.close();
-				goldenInput_rTow1.close();
-			}
-
 			frAccMetric = ViterbiDecoder[j].Decode(fvecMetric, vecDecOutBits[j]);
+#endif		
 			
-			{
-				int ivec = 0;
 
-				// Declare the file handlers.
-				ofstream goldenOutput;
-				
-				// Read output buffer
-				goldenOutput.open("goldenOutput.txt");
-				goldenOutput << "iLevel = " << j << "\n";
-				for(ivec=0; ivec<vecDecOutBits[j].Size(); ivec++) {
-					goldenOutput << (double) vecDecOutBits[j][ivec] <<",";
-				
-					if(ivec % 16 == 0) {
-						goldenOutput << "\n";
-					}
-				}
-				goldenOutput << "\n\n" << "--------------------------------\n";
-				goldenOutput.close();
-			}
-
-			/* The last branch of encoding and interleaving must not be used at
+            /* The last branch of encoding and interleaving must not be used at
 			   the very last loop */
 			/* "iLevels - 1" for iLevels = 1, 2, 3
 			   "iLevels - 2" for iLevels = 6 */
